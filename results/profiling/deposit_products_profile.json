@@ -1,0 +1,262 @@
+{
+  "snapshot_source": "data\\raw\\finlife_deposit_2026-08-18_page1.json",
+  "fetched_at": "2026-08-18T09:28:37Z",
+  "product_count": 38,
+  "option_count": 152,
+  "base_list_fields": [
+    "dcls_end_day",
+    "dcls_month",
+    "dcls_strt_day",
+    "etc_note",
+    "fin_co_no",
+    "fin_co_subm_day",
+    "fin_prdt_cd",
+    "fin_prdt_nm",
+    "join_deny",
+    "join_member",
+    "join_way",
+    "kor_co_nm",
+    "max_limit",
+    "mtrt_int",
+    "spcl_cnd"
+  ],
+  "option_list_fields": [
+    "dcls_month",
+    "fin_co_no",
+    "fin_prdt_cd",
+    "intr_rate",
+    "intr_rate2",
+    "intr_rate_type",
+    "intr_rate_type_nm",
+    "save_trm"
+  ],
+  "non_null_ratio": {
+    "spcl_cnd": 0.9737,
+    "mtrt_int": 1.0,
+    "etc_note": 1.0
+  },
+  "text_length_stats": {
+    "spcl_cnd": {
+      "n": 38,
+      "min": 2,
+      "max": 221,
+      "mean": 81.0,
+      "median": 79.5,
+      "p90": 165
+    },
+    "mtrt_int": {
+      "n": 38,
+      "min": 59,
+      "max": 126,
+      "mean": 90.2,
+      "median": 87.0,
+      "p90": 121
+    },
+    "etc_note": {
+      "n": 38,
+      "min": 4,
+      "max": 140,
+      "mean": 46.9,
+      "median": 41.0,
+      "p90": 87
+    }
+  },
+  "condition_complexity": {
+    "spcl_cnd": {
+      "n": 37,
+      "and_marker_ratio": 0.162,
+      "or_marker_ratio": 0.135,
+      "and_and_or_ratio": 0.054,
+      "avg_numeric_conditions_per_text": 3.05,
+      "max_numeric_conditions_in_one_text": 11
+    },
+    "mtrt_int": {
+      "n": 38,
+      "and_marker_ratio": 0.0,
+      "or_marker_ratio": 0.026,
+      "and_and_or_ratio": 0.0,
+      "avg_numeric_conditions_per_text": 5.21,
+      "max_numeric_conditions_in_one_text": 9
+    },
+    "etc_note": {
+      "n": 38,
+      "and_marker_ratio": 0.0,
+      "or_marker_ratio": 0.026,
+      "and_and_or_ratio": 0.0,
+      "avg_numeric_conditions_per_text": 1.5,
+      "max_numeric_conditions_in_one_text": 6
+    }
+  },
+  "options_per_product": {
+    "n": 38,
+    "min": 1,
+    "max": 6,
+    "mean": 4
+  },
+  "rate_distribution_by_term_months": {
+    "1": {
+      "n": 19,
+      "base_rate_mean": 2.216,
+      "max_rate_mean": 2.469,
+      "spread_mean": 0.253,
+      "spread_max": 1.35
+    },
+    "3": {
+      "n": 27,
+      "base_rate_mean": 2.497,
+      "max_rate_mean": 2.828,
+      "spread_mean": 0.331,
+      "spread_max": 1.35
+    },
+    "6": {
+      "n": 30,
+      "base_rate_mean": 2.682,
+      "max_rate_mean": 3.066,
+      "spread_mean": 0.383,
+      "spread_max": 1.4
+    },
+    "12": {
+      "n": 38,
+      "base_rate_mean": 2.879,
+      "max_rate_mean": 3.313,
+      "spread_mean": 0.434,
+      "spread_max": 1.8
+    },
+    "24": {
+      "n": 20,
+      "base_rate_mean": 2.491,
+      "max_rate_mean": 2.808,
+      "spread_mean": 0.318,
+      "spread_max": 1.95
+    },
+    "36": {
+      "n": 18,
+      "base_rate_mean": 2.497,
+      "max_rate_mean": 2.774,
+      "spread_mean": 0.278,
+      "spread_max": 2.0
+    }
+  },
+  "per_bank_rollup": [
+    {
+      "bank": "경남은행",
+      "product_count": 3,
+      "avg_base_rate": 2.3,
+      "avg_max_rate": 2.927
+    },
+    {
+      "bank": "광주은행",
+      "product_count": 4,
+      "avg_base_rate": 2.912,
+      "avg_max_rate": 3.065
+    },
+    {
+      "bank": "국민은행",
+      "product_count": 1,
+      "avg_base_rate": 2.308,
+      "avg_max_rate": 2.717
+    },
+    {
+      "bank": "농협은행주식회사",
+      "product_count": 4,
+      "avg_base_rate": 2.696,
+      "avg_max_rate": 2.843
+    },
+    {
+      "bank": "부산은행",
+      "product_count": 3,
+      "avg_base_rate": 1.946,
+      "avg_max_rate": 2.804
+    },
+    {
+      "bank": "수협은행",
+      "product_count": 3,
+      "avg_base_rate": 3.237,
+      "avg_max_rate": 3.528
+    },
+    {
+      "bank": "신한은행",
+      "product_count": 2,
+      "avg_base_rate": 2.215,
+      "avg_max_rate": 2.85
+    },
+    {
+      "bank": "아이엠뱅크",
+      "product_count": 2,
+      "avg_base_rate": 2.929,
+      "avg_max_rate": 3.15
+    },
+    {
+      "bank": "우리은행",
+      "product_count": 1,
+      "avg_base_rate": 2.8,
+      "avg_max_rate": 2.8
+    },
+    {
+      "bank": "전북은행",
+      "product_count": 3,
+      "avg_base_rate": 2.803,
+      "avg_max_rate": 2.928
+    },
+    {
+      "bank": "제주은행",
+      "product_count": 3,
+      "avg_base_rate": 1.943,
+      "avg_max_rate": 2.793
+    },
+    {
+      "bank": "주식회사 카카오뱅크",
+      "product_count": 1,
+      "avg_base_rate": 3.2,
+      "avg_max_rate": 3.2
+    },
+    {
+      "bank": "주식회사 케이뱅크",
+      "product_count": 1,
+      "avg_base_rate": 3.243,
+      "avg_max_rate": 3.243
+    },
+    {
+      "bank": "주식회사 하나은행",
+      "product_count": 1,
+      "avg_base_rate": 2.225,
+      "avg_max_rate": 2.742
+    },
+    {
+      "bank": "중소기업은행",
+      "product_count": 3,
+      "avg_base_rate": 2.791,
+      "avg_max_rate": 2.845
+    },
+    {
+      "bank": "토스뱅크 주식회사",
+      "product_count": 1,
+      "avg_base_rate": 3.333,
+      "avg_max_rate": 3.333
+    },
+    {
+      "bank": "한국산업은행",
+      "product_count": 1,
+      "avg_base_rate": 2.842,
+      "avg_max_rate": 2.842
+    },
+    {
+      "bank": "한국스탠다드차타드은행",
+      "product_count": 1,
+      "avg_base_rate": 2.987,
+      "avg_max_rate": 3.138
+    }
+  ],
+  "complex_condition_examples": [
+    "1.SC제일은행 최초 거래 신규고객 우대이율 제공(보너스이율0.1%)                     \n2.만기일에 아래의 조건을 모두 충족하는 경우보너스이율 제공\n-6~12개월제(만기일시지급식) 5천만원 이상 가입\n-만기일 기준 전전월 마지막 영업일에 수익증권(펀드)*을 3천만원 이상 보유 \n(가입기간: 6개월~1년제/ 보너스이율:0.1% / 만기해약하는 경우에 한해 보너스이율을 적용함)",
+    "* 최고우대금리: 연0.45%p\n- 전월 총수신 평잔 30만원 이상 또는 상품 가입 전 첫만남플러스통장 보유\n- 상품 가입 전 당행 주택청약상품 보유\n- 신규일 \"iM함께적금\" 동시 가입 및 만기(12회 불입) 보유 \n- 당행 오픈뱅킹서비스에 다른 은행 계좌 등록\n각 연0.10%p                       \n* 해당 상품을 인터넷/모바일뱅킹을 통해 가입: 연0.05%p",
+    "①신규시 가입(재예치)금액 20백만원 이상인 경우 0.10%\n②신규시 금리우대쿠폰을 등록한 경우 0.20% \n③경남은행 오픈뱅킹 서비스를 가입한 경우 0.10%\n(만기시까지 해당서비스 유지하는 경우)\n④자동재예치를 통해 가입한 경우 0.05%\n(금리우대쿠폰과 중복적용 불가)\n⑤신규(재예치)시 마케팅동의 및 모바일메시지 수신동의 0.10%",
+    "자동재예치 우대이율\n1회차 0.1%,\n2회차 0.2%,\n3회차 0.3%\n\n(이벤트우대이율)\n2026.5.28~12.31 까지\n1)가입일직전 6개월 동안 당행 원화 정기예금 보유이력이 없는 경우 0.50%\n2.개인(신용)정보 수집/이용 동의한 경우(단, 상품서비스 안내수단 전체 동의한 경우에 한함) 0.10%",
+    "최고 연 0.1%p(항목별 0.1%p)\n①급여이체\n②적립식예금 잔액 10만원 이상 보유\n③탑스, 주거래 고객\n④결제계좌(가맹점) 전월 입금액 10만원 이상 \n⑤비과세종합저축 대상 고객\n⑥다자녀(3인이상 자녀)가정\n⑦탐나는 J연금통장 가입고객\n⑧국민연금안심통장 가입고객\n⑨공무원연금안심통장 가입고객",
+    "* 최대우대금리:0.35%\n1. 해양플라스틱감축서약 : 0.1% (신규시) \n2. 봉사활동 또는 상품홍보 : 0.15% (만기시) \n3. 입출금통장 최초신규 : 0.1% (만기시)\n4. 자동이체 출금실적 : 0.1% (만기시)\n - 수협신용카드 / 당행 펀드 또는 적금 / 수협체크카드",
+    "-아래의 우대요건 충족시 최고0.3% 추가우대(신규시제공)\n①김만덕나눔적금 보유 또는 김만적 나눔적금 만기 해지고객 0.2%우대(가입시제공)\n②예금가입시 탐나는전 체크카드 보유고객 0.1%우대(가입시제공)\n(단, 이벤트시 영업점,디지털채널에 고시한 우대금리를 추가 적용할 수 있음)",
+    "1. 고향사랑기부금 납부고객 우대 : 0.3%p\n\n2-1. 만65세 이상 고령자 우대 : 0.1%p\n2-2. 만 19~34세 MZ고객 우대 : 0.1%p\n\n3. 고향사랑 특별금리 : 0.05%p (금리시장상황에 따라 변동 가능)\n - 고향사랑 특별금리는 상품 가입고객 모두에게 적용",
+    "- 아래의 우대요건 충족시 최고 0.5%p 추가 우대 \n①비대면 채널 가입시 0.3%제공(신규시제공)  \n(단, 이벤트시 디지털 채널에 고시한 우대금리를 추가 적용할 수 있음)\n②신규일로부터 만기달 제외한 계약기간의 1/2이상 매월 Jbank로그인 시 0.2%제공(만기시제공)",
+    "* 최고우대금리 : 연0.25%p\n- 가입일(재예치일)로부터 3개월 이내 아래 1가지 이상 요건 충족시\n① 당행 주택청약종합저축 보유\n② 당행 신용(체크)카드 결제실적 보유(결제금액 출금기준)\n* 해당 상품을 인터넷/모바일뱅킹을 통해 가입 : 연0.05%p"
+  ]
+}
