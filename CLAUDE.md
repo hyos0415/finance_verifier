@@ -136,3 +136,15 @@ WSL2+GPU 정상, vLLM 기본 endpoint 정상, Finlife API 호출 정상, 정기�
 ## 다음 작업 (핸드오프 문서 기준)
 
 우선순위: **B-0(모델 로드 체크, 병렬 최우선) → A(repo/secret) → B(WSL2/vLLM) → C(API 첫 호출) → D(데이터 프로파일링) → E(canonical schema) → F(모델 로드 smoke 심화)**. 상세 체크리스트는 원본 핸드오프 문서 참조(로컬 경로는 memory의 reference 항목 참고).
+
+각 작업 블록은 GitHub 이슈로 트래킹한다: [#1 A](../../issues/1)(완료) · [#2 B-0](../../issues/2) · [#3 B](../../issues/3) · [#4 C](../../issues/4) · [#5 D](../../issues/5) · [#6 E](../../issues/6) · [#7 F](../../issues/7).
+
+## Git / 이슈 관리 방침
+
+1주 솔로 프로젝트 규모에 맞춘 경량 워크플로우. 무겁게 가지 않는다 (required review, CI 게이트, project board, milestone 등은 쓰지 않음).
+
+- **이슈**: 핸드오프 문서 24번 섹션(A~F) 작업 블록 단위로 하나씩. 세부 항목은 이슈 본문 체크박스로 관리하고, 작업하다 새로 쪼개야 할 하위 작업이 생기면 그때 이슈를 추가한다.
+- **브랜치**: `<이슈번호>-slug` (예: `4-finlife-api-fetch`).
+- **PR**: 이슈 하나당 PR 하나. PR 본문에 `Closes #N`을 넣어 머지 시 이슈가 자동으로 닫히게 한다. 리뷰어는 없으므로 self-merge, **squash merge**로 히스토리를 깔끔하게 유지한다.
+- **커밋 메시지**: `feat:` / `fix:` / `chore:` / `docs:` 정도의 최소 prefix만 사용.
+- 이미 끝난 작업(예: repo/secret 초기 설정)을 뒤늦게 이슈로 추적할 때는, 이슈를 만들고 관련 커밋 SHA를 comment로 남긴 뒤 바로 닫아 히스토리만 남긴다.
