@@ -82,6 +82,14 @@ Eval harness / Claim Decomposer / 데이터 수집 코드는 처음부터 컨테
 - 계층(모델 로드 → WSL2 GPU → Docker GPU → vLLM container)을 한 번에 묶어서 디버깅하지 않는다 — 각 단계가 독립적으로 성공하는지 순서대로 확인한다.
 - WSL2/Docker/vLLM 세팅이 막히면 모델 검증은 Transformers 경로로 임시 진행.
 
+### WSL2 + vLLM 컨테이너에서 실제로 겪은 이슈 (재현 시 참고)
+
+- **UVA(pinned memory) 에러** (`RuntimeError: UVA is not available`): vLLM은 WSL2를 감지하면 기본적으로 pinned memory를 꺼두는데, 최신 V1 엔진 일부 버퍼가 이를 필수로 요구해 실패한다. `-e VLLM_WSL2_ENABLE_PIN_MEMORY=1`로 해결.
+- **GPU 메모리 예산 부족** (`No available memory for the cache blocks`): WSL2 GPU 가상화 오버헤드로 실제 가용 VRAM이 8GB보다 적다 (컨테이너 내부 기준 관측치 ~6.89GB, Windows `nvidia-smi`는 이 오버헤드를 안 보여줌). `--enforce-eager`(CUDA graph/컴파일 비활성화)로 여유를 확보한다.
+- **Git Bash `-v` 볼륨 마운트 경로 변환 버그**: `-v "/c/Users/.../huggingface:/root/.cache/huggingface"` 형태로 주면 MSYS가 경로를 잘못 변환해 마운트가 조용히 실패한다 (컨테이너 안에 디렉터리가 안 생겨서, 캐시가 있어도 매번 재다운로드하는 것처럼 보임). **Windows + Git Bash에서 `docker run -v`를 쓸 때는 항상** `MSYS_NO_PATHCONV=1` + Windows 스타일 호스트 경로(`C:\Users\...`)를 쓴다. `scripts/run_vllm_container.sh`에 반영됨.
+
+두 후보 모두 vLLM 공식 이미지에서 실제 서빙 확인됨 (`docker exec`/curl로 `/v1/chat/completions` 응답 확인). **Qwen AutoRound는 vLLM에서 `MarlinLinearKernel`(AutoGPTQ 계열 INT4 전용 fused 커널)을 자동 채택해 Windows Transformers fallback(~1.6 tok/s)보다 훨씬 빠르게 돈다** — Windows에서 겪은 "INT4가 BF16보다 20배 느림" 문제는 vLLM 단계에서 해소됨. 실제 latency/VRAM 정식 비교는 이슈 #7(모델 serving smoke 심화)에서 진행.
+
 ### Docker 시크릿 전달 원칙
 
 - `FINLIFE_API_KEY`는 금융상품 API 수집 코드에만 필요하다. **vLLM inference container에는 전달하지 않는다.**
