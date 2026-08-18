@@ -45,15 +45,46 @@ Retrieval correctness ≠ Answer correctness — 검색이 정확한 근거를 �
 
 두 후보는 양자화 조건이 다르므로(INT4 vs BF16) 성능차를 순수 모델 차이로 해석하지 않는다. 비교 목적은 "동일 8GB GPU 환경에서 각자 신뢰 가능한 실행 경로를 썼을 때 어떤 조합이 Verifier 역할에 더 적합한가". 가능한 한 inference engine / prompt / context length / generation config / temperature / max tokens / eval dataset은 통일한다.
 
-**모델 로드 체크는 순서가 중요하다.** "체크포인트가 Transformers로 로드되는가"는 WSL2/vLLM 세팅과 무관하게 최우선·병렬로 바로 확인한다(리포 세팅 직후). "vLLM에서 이 아키텍처가 도는가"는 WSL2+vLLM 세팅 이후에 확인해도 된다 — vLLM은 미지원 아키텍처를 Transformers backend로 fallback할 수 있어서 여기서 막혀도 회복 여지가 있다.
+**모델 로드 체크는 순서가 중요하다.** "체크포인트가 Transformers로 로드되는가"는 WSL2/Docker 세팅과 무관하게 최우선·병렬로 바로 확인한다(리포 세팅 직후). Kanana는 이 단계에서 실패하면 후보 자체를 재검토해야 하는 리스크가 크다. **Qwen AutoRound는 Windows native Transformers에서 실패해도 바로 탈락시키지 않는다** — 모델 아키텍처 문제 / AutoRound·quantization backend 문제 / Windows backend 문제를 분리해서 보고, 최종 판단은 WSL2 + Docker + vLLM 경로에서 실제 serving 가능한지까지 확인한 뒤 내린다. "vLLM에서 이 아키텍처가 도는가"는 WSL2+Docker+vLLM 세팅 이후에 확인해도 된다 — vLLM은 미지원 아키텍처를 Transformers backend로 fallback할 수 있어서 여기서 막혀도 회복 여지가 있다.
 
 ## 실행 환경
 
-Windows 11 + RTX 4070 Laptop 8GB → WSL2 → Ubuntu → CUDA/PyTorch → vLLM → OpenAI-compatible endpoint.
+최종 아키텍처 (Docker 포함, 확정):
 
-- WSL 내부에 NVIDIA Linux display driver를 중복 설치하지 않는다 (Windows 드라이버 사용).
-- 모델/프로젝트 파일은 가능하면 WSL 내부 filesystem에 둔다.
-- vLLM 세팅이 막히면 모델 검증은 Transformers 경로로 임시 진행.
+```
+Windows 11 + RTX 4070 Laptop 8GB
+    ↓
+WSL2 (Ubuntu)
+    ↓
+Docker Desktop (WSL2 backend)
+    ↓
+Linux GPU Container
+    ↓
+vLLM (공식 vllm/vllm-openai 이미지)
+    ↓
+OpenAI-compatible endpoint
+    ↓
+Eval / Claim Decomposer / Verifier client (WSL2 또는 host Python, GPU 불필요)
+```
+
+Docker는 연구 대상이 아니라 지원 계층이다. 목적은 둘로 제한한다.
+
+1. vLLM/CUDA/Python 의존성을 이미지로 고정해 재현 가능한 추론 서버 구성
+2. Qwen/Kanana 두 후보를 동일한 serving interface로 평가
+
+Eval harness / Claim Decomposer / 데이터 수집 코드는 처음부터 컨테이너화하지 않는다 — 이번 프로젝트에서는 **vLLM serving layer만** 컨테이너로 격리한다.
+
+- WSL 내부에 NVIDIA Linux display driver, Docker Engine을 각각 중복 설치하지 않는다 (Windows driver + Docker Desktop WSL integration만 사용).
+- 모델/프로젝트 파일과 Hugging Face cache(`~/.cache/huggingface`)는 WSL filesystem에 두고 container에 volume mount (재기동 시 재다운로드 방지).
+- 직접 CUDA base image를 만들지 않고 vLLM 공식 이미지(`vllm/vllm-openai`)를 우선 사용한다. `docker run` 위주로 시작하고, Compose는 서비스가 여러 개로 늘어났을 때만 검토한다.
+- 계층(모델 로드 → WSL2 GPU → Docker GPU → vLLM container)을 한 번에 묶어서 디버깅하지 않는다 — 각 단계가 독립적으로 성공하는지 순서대로 확인한다.
+- WSL2/Docker/vLLM 세팅이 막히면 모델 검증은 Transformers 경로로 임시 진행.
+
+### Docker 시크릿 전달 원칙
+
+- `FINLIFE_API_KEY`는 금융상품 API 수집 코드에만 필요하다. **vLLM inference container에는 전달하지 않는다.**
+- 컨테이너에 secret이 필요한 경우: image build 단계에 bake하지 않고, Dockerfile `ENV`로 직접 넣지 않는다. runtime env / env-file 방식으로만 전달.
+- API key 값은 stdout, 파일, Git diff, **Docker image**에도 절대 출력/저장하지 않는다.
 
 ## 데이터
 
@@ -103,7 +134,7 @@ Accuracy는 보조 지표일 뿐 우선순위에 넣지 않는다.
 
 ## 지금 하지 않는 것
 
-전체 Agent orchestration, LangGraph, 실제 서비스 완성, VLM/PDF 처리, 자체 AutoRound 양자화, Fine-tuning, LLM-as-a-Judge, 대출/적금 등 상품군 확대, 대규모 RAG. 중심은 **Claim Decomposition + Verifier + 평가/회귀 관리**.
+전체 Agent orchestration, LangGraph, 실제 서비스 완성, VLM/PDF 처리, 자체 AutoRound 양자화, Fine-tuning, LLM-as-a-Judge, 대출/적금 등 상품군 확대, 대규모 RAG, Kubernetes, custom CUDA base image 직접 구축, 복잡한 multi-service Docker Compose, CI/CD·registry/deployment pipeline, 데이터/eval 코드 전체를 무리하게 컨테이너화. 중심은 **Claim Decomposition + Verifier + 평가/회귀 관리**. Docker는 **재현 가능한 vLLM serving 환경을 제공하는 지원 계층**으로만 쓴다.
 
 ## 프로젝트 구조
 
@@ -123,21 +154,34 @@ finance_verifier/
 ├── prompts/
 │   ├── decomposer/
 │   └── verifier/
+├── scripts/
+│   ├── docker_gpu_smoke.sh
+│   └── run_vllm_container.sh
 └── results/
     ├── model_selection/ prompt_versions/ final/
 ```
 
-이 구조는 제안안이다. 구현 과정에서 불필요한 디렉터리는 줄여도 된다.
+이 구조는 제안안이다. 구현 과정에서 불필요한 디렉터리는 줄여도 된다. 현재 단계에서 별도 Dockerfile/Compose 파일을 반드시 만들 필요는 없다 — vLLM 공식 이미지 + `docker run`으로 시작하고, 반복 실행 명령이 길어지면 `scripts/run_vllm_container.sh`로 고정한다.
 
 ## 완료 기준 (1단계)
 
-WSL2+GPU 정상, vLLM 기본 endpoint 정상, Finlife API 호출 정상, 정기예금 raw snapshot 확보, baseList/optionList 구조 확인, Qwen/Kanana 두 모델 최소 inference 확인.
+```
+1. Qwen / Kanana 두 후보 최소 inference 확인
+2. WSL2 + GPU 정상
+3. Docker Desktop WSL2 integration 정상
+4. Docker container 내부 GPU 정상
+5. vLLM 공식 container + 작은 모델 endpoint 정상
+6. 실제 후보 모델의 vLLM serving 가능 여부 확인
+7. 금융상품 한눈에 API 호출 정상
+8. 은행권 정기예금 raw snapshot 확보
+9. 실제 baseList / optionList 구조 확인
+```
 
 ## 다음 작업 (핸드오프 문서 기준)
 
-우선순위: **B-0(모델 로드 체크, 병렬 최우선) → A(repo/secret) → B(WSL2/vLLM) → C(API 첫 호출) → D(데이터 프로파일링) → E(canonical schema) → F(모델 로드 smoke 심화)**. 상세 체크리스트는 원본 핸드오프 문서 참조(로컬 경로는 memory의 reference 항목 참고).
+우선순위: **모델 로드 최우선 체크(Kanana/Qwen 분리, WSL2/Docker와 무관하게 병렬) → WSL2 GPU 확인 → Docker Desktop + WSL2 통합 → Docker GPU smoke → vLLM 공식 container smoke → 실제 후보 모델 vLLM serving → Finlife API 첫 호출 → 데이터 프로파일링 → canonical schema 초안**. 상세 체크리스트는 원본 핸드오프 문서 참조 (로컬 경로는 memory의 reference 항목 참고 — Docker 도입판 문서 포함).
 
-각 작업 블록은 GitHub 이슈로 트래킹한다: [#1 A](../../issues/1)(완료) · [#2 B-0](../../issues/2) · [#3 B](../../issues/3) · [#4 C](../../issues/4) · [#5 D](../../issues/5) · [#6 E](../../issues/6) · [#7 F](../../issues/7).
+각 작업 블록은 GitHub 이슈로 트래킹한다: [#1](../../issues/1)(완료, repo/secret) · [#2](../../issues/2)(모델 로드 체크) · [#3](../../issues/3)(WSL2/vLLM — Docker 단계 포함하도록 범위 확장됨, 착수 시 WSL2 GPU/Docker Desktop/Docker GPU smoke/vLLM container smoke로 세분화 예정) · [#4](../../issues/4)(API 첫 호출) · [#5](../../issues/5)(데이터 프로파일링) · [#6](../../issues/6)(canonical schema) · [#7](../../issues/7)(모델 serving smoke — 심화).
 
 ## Git / 이슈 관리 방침
 
