@@ -16,23 +16,17 @@ import statistics
 import sys
 from pathlib import Path
 
+from src.ingest.text_utils import is_no_info
+
 REPO_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_SNAPSHOT = REPO_ROOT / "data" / "raw" / "finlife_deposit_2026-08-18_page1.json"
 OUT_PATH = REPO_ROOT / "results" / "profiling" / "deposit_products_profile.json"
 
 FREE_TEXT_FIELDS = ["spcl_cnd", "mtrt_int", "etc_note"]
 
-# Finlife free-text fields use several placeholder spellings for "no info" —
-# an exact match on "해당사항 없음" alone misses "없음" / "해당없음" variants
-# and silently overcounts natural-missing samples as populated text.
-NO_INFO_PLACEHOLDERS = {"해당사항 없음", "없음", "해당없음"}
 AND_MARKERS = ["및", "동시에", "모두 충족", "각각"]
 OR_MARKERS = ["또는", "혹은", "중 하나"]
 NUMERIC_COND_PATTERN = re.compile(r"\d+(\.\d+)?\s*(%|퍼센트|만원|개월|년)")
-
-
-def is_no_info(value) -> bool:
-    return value is None or (isinstance(value, str) and value.strip() in NO_INFO_PLACEHOLDERS | {""})
 
 
 def non_null_ratio(records: list[dict], field: str) -> float:
