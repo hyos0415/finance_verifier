@@ -1,0 +1,4 @@
+# results/*.html are hand-authored data dashboards with an inlined base64 web
+# font (megabytes of bytes) -- exclude them from GitHub's language stats so
+# HTML doesn't drown out the actual Python pipeline code.
+results/**/*.html linguist-documentation
