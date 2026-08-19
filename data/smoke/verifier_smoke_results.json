@@ -1,0 +1,138 @@
+{
+  "kanana": [
+    {
+      "claim_id": "p002_c01",
+      "gold_label": "SUPPORTED",
+      "predicted_verdict": "SUPPORTED",
+      "match": true,
+      "schema_valid": true,
+      "latency_seconds": 4.035,
+      "reason": "evidence에 기본금리가 3.65%로 명시되어 있으므로 claim과 일치한다.",
+      "error": null,
+      "raw_content": "{ \"verdict\": \"SUPPORTED\", \"evidence\": \"e-그린세이브예금 12개월 옵션 — 기본금리(base_rate): 3.65%, 최고금리(max_rate): 3.85%\", \"reason\": \"evidence에 기본금리가 3.65%로 명시되어 있으므로 claim과 일치한다.\" }"
+    },
+    {
+      "claim_id": "p002_c02",
+      "gold_label": "UNSUPPORTED",
+      "predicted_verdict": "UNSUPPORTED",
+      "match": true,
+      "schema_valid": true,
+      "latency_seconds": 3.532,
+      "reason": "evidence에 기본금리가 3.65%로 명시되어 있고, 최고금리가 3.85%로 명시되어 있으므로, 기본금리가 3.85%라는 주장은 evidence에 없다.",
+      "error": null,
+      "raw_content": "{ \"verdict\": \"UNSUPPORTED\", \"evidence\": \"e-그린세이브예금 12개월 옵션 — 기본금리(base_rate): 3.65%, 최고금리(max_rate): 3.85%\", \"reason\": \"evidence에 기본금리가 3.65%로 명시되어 있고, 최고금리가 3.85%로 명시되어 있으므로, 기본금리가 3.85%라는 주장은 evidence에 없다.\" }"
+    },
+    {
+      "claim_id": "p003_c02_4",
+      "gold_label": "UNSUPPORTED",
+      "predicted_verdict": "SUPPORTED",
+      "match": false,
+      "schema_valid": true,
+      "latency_seconds": 4.46,
+      "reason": "Claim의 '전월 총수신 평잔 30만원 이상 조건과 첫만남플러스통장 보유 조건 동시 충족' 요구는 evidence의 '전월 총수신 평잔 30만원 이상 또는 첫만남플러스통장 보유' 조건과 논리적으로 일치한다. 즉, 두 조건 중 하나라도 충족하면 되므로, claim이 evidence를 직접적으로 뒷받침한다.",
+      "error": null,
+      "raw_content": "{ \"verdict\": \"SUPPORTED\", \"evidence\": \"전월 총수신 평잔 30만원 이상 또는 상품 가입 전 첫만남플러스통장 보유\", \"reason\": \"Claim의 '전월 총수신 평잔 30만원 이상 조건과 첫만남플러스통장 보유 조건 동시 충족' 요구는 evidence의 '전월 총수신 평잔 30만원 이상 또는 첫만남플러스통장 보유' 조건과 논리적으로 일치한다. 즉, 두 조건 중 하나라도 충족하면 되므로, claim이 evidence를 직접적으로 뒷받침한다.\" }"
+    },
+    {
+      "claim_id": "p021_c01_4",
+      "gold_label": "UNSUPPORTED",
+      "predicted_verdict": "SUPPORTED",
+      "match": false,
+      "schema_valid": true,
+      "latency_seconds": 6.62,
+      "reason": "Claim에서 '만기 후 6개월을 초과하는 구간에는 계약기간별 고시금리의 30%가 적용된다'는 내용이 evidence의 '-1월 초과 6개월 이내: 만기일 당시 계약기간별 고시금리×30%'와 정확히 일치하므로, 주어진 evidence만으로 claim을 뒷받침한다.",
+      "error": null,
+      "raw_content": "{ \"verdict\": \"SUPPORTED\", \"evidence\": \"IBK평생한가족통장(실세금리정기예금) 만기후이자(mtrt_int): 만기일 당시 정기예금 만기후 이자율 적용 -1개월 이내: 만기일 당시 계약기간별 고시금리×50% -1월 초과 6개월 이내: 만기일 당시 계약기간별 고시금리×30% -6개월 초과: 만기일 당시 계약기간별 고시금리×20%\", \"reason\": \"Claim에서 '만기 후 6개월을 초과하는 구간에는 계약기간별 고시금리의 30%가 적용된다'는 내용이 evidence의 '-1월 초과 6개월 이내: 만기일 당시 계약기간별 고시금리×30%'와 정확히 일치하므로, 주어진 evidence만으로 claim을 뒷받침한다.\" }"
+    },
+    {
+      "claim_id": "p022_c01",
+      "gold_label": "INSUFFICIENT",
+      "predicted_verdict": "INSUFFICIENT",
+      "match": true,
+      "schema_valid": true,
+      "latency_seconds": 2.835,
+      "reason": "evidence에 우대금리를 받을 수 있는 조건(급여이체)에 대한 정보가 제공되지 않아 판단할 수 없다.",
+      "error": null,
+      "raw_content": "{ \"verdict\": \"INSUFFICIENT\", \"evidence\": \"IBK더굴리기통장(실세금리정기예금) 우대조건(spcl_cnd): 우대조건 정보 없음\", \"reason\": \"evidence에 우대금리를 받을 수 있는 조건(급여이체)에 대한 정보가 제공되지 않아 판단할 수 없다.\" }"
+    },
+    {
+      "claim_id": "p002_c05_3",
+      "gold_label": "UNSUPPORTED",
+      "predicted_verdict": "UNSUPPORTED",
+      "match": true,
+      "schema_valid": true,
+      "latency_seconds": 3.387,
+      "reason": "evidence에 '보너스이율 0.1%'에 대한 언급이 없다. 별도의 조건 없이 항상 적용된다는 내용이 없으므로 claim을 뒷받침하지 않는다.",
+      "error": null,
+      "raw_content": "{ \"verdict\": \"UNSUPPORTED\", \"evidence\": \"e-그린세이브예금 12개월 옵션 — 기본금리(base_rate): 3.65%, 최고금리(max_rate): 3.85%\", \"reason\": \"evidence에 '보너스이율 0.1%'에 대한 언급이 없다. 별도의 조건 없이 항상 적용된다는 내용이 없으므로 claim을 뒷받침하지 않는다.\" }"
+    }
+  ],
+  "qwen": [
+    {
+      "claim_id": "p002_c01",
+      "gold_label": "SUPPORTED",
+      "predicted_verdict": "SUPPORTED",
+      "match": true,
+      "schema_valid": true,
+      "latency_seconds": 12.965,
+      "reason": "주어진 증거에서 'e-그린세이브예금 12 개월 옵션'의 '기본금리(base_rate)'가 명시적으로 '3.65%'로 기재되어 있으므로, 이 정보가 주장 (Claim) 을 직접 뒷받침합니다.",
+      "error": null,
+      "raw_content": "{\n  \"verdict\": \"SUPPORTED\",\n  \"evidence\": \"e-그린세이브예금 12 개월 옵션 — 기본금리(base_rate): 3.65%, 최고금리(max_rate): 3.85%\",\n  \"reason\": \"주어진 증거에서 'e-그린세이브예금 12 개월 옵션'의 '기본금리(base_rate)'가 명시적으로 '3.65%'로 기재되어 있으므로, 이 정보가 주장 (Claim) 을 직접 뒷받침합니다.\"\n}"
+    },
+    {
+      "claim_id": "p002_c02",
+      "gold_label": "UNSUPPORTED",
+      "predicted_verdict": "UNSUPPORTED",
+      "match": true,
+      "schema_valid": true,
+      "latency_seconds": 8.903,
+      "reason": "주어진 증거에 따르면 기본금리(base_rate)는 3.65%이며, 3.85%는 최고금리(max_rate)로 명시되어 있습니다. 따라서 증거는 주장된 '기본금리가 3.85%'와 명시적으로 충돌합니다.",
+      "error": null,
+      "raw_content": "{\n  \"verdict\": \"UNSUPPORTED\",\n  \"evidence\": \"e-그린세이브예금 12 개월 옵션 — 기본금리(base_rate): 3.65%, 최고금리(max_rate): 3.85%\",\n  \"reason\": \"주어진 증거에 따르면 기본금리(base_rate)는 3.65%이며, 3.85%는 최고금리(max_rate)로 명시되어 있습니다. 따라서 증거는 주장된 '기본금리가 3.85%'와 명시적으로 충돌합니다.\"\n}"
+    },
+    {
+      "claim_id": "p003_c02_4",
+      "gold_label": "UNSUPPORTED",
+      "predicted_verdict": "UNSUPPORTED",
+      "match": true,
+      "schema_valid": true,
+      "latency_seconds": 17.39,
+      "reason": "Evidence 에서 '전월 총수신 평잔 30만원 이상'과 '상품 가입 전 첫만남플러스통장 보유'는 '또는 (OR)' 관계로 명시되어 있습니다. 따라서 두 조건을 동시에 충족해야 한다는 Claim 은 Evidence 와 충돌합니다.",
+      "error": null,
+      "raw_content": "{\n  \"verdict\": \"UNSUPPORTED\",\n  \"evidence\": \"iM함께예금 우대조건(spcl_cnd): * 최고우대금리: 연0.45%p\\n- 전월 총수신 평잔 30만원 이상 또는 상품 가입 전 첫만남플러스통장 보유\\n- 상품 가입 전 당행 주택청약상품 보유\\n- 신규일 \\\"iM함께적금\\\" 동시 가입 및 만기(12회 불입) 보유 \\n- 당행 오픈뱅킹서비스에 다른 은행 계좌 등록\\n각 연0.10%p \\n* 해당 상품을 인터넷/모바일뱅킹을 통해 가입: 연0.05%p\",\n  \"reason\": \"Evidence 에서 '전월 총수신 평잔 30만원 이상'과 '상품 가입 전 첫만남플러스통장 보유'는 '또는 (OR)' 관계로 명시되어 있습니다. 따라서 두 조건을 동시에 충족해야 한다는 Claim 은 Evidence 와 충돌합니다.\"\n}"
+    },
+    {
+      "claim_id": "p021_c01_4",
+      "gold_label": "UNSUPPORTED",
+      "predicted_verdict": "UNSUPPORTED",
+      "match": true,
+      "schema_valid": true,
+      "latency_seconds": 16.101,
+      "reason": "주어진 Evidence 에 따르면, 만기 후 6 개월을 초과하는 구간 (-6 개월 초과) 에는 '고시금리×20%' 가 적용됩니다. 반면, Claim 은 이 구간에서 '30%' 가 적용된다고 주장하고 있습니다. 따라서 Evidence 는 Claim 과 명시적으로 충돌합니다.",
+      "error": null,
+      "raw_content": "{\n  \"verdict\": \"UNSUPPORTED\",\n  \"evidence\": \"IBK평생한가족통장(실세금리정기예금) 만기후이자(mtrt_int): 만기일 당시 정기예금 만기후 이자율 적용 -1개월 이내: 만기일 당시 계약기간별 고시금리×50% -1월 초과 6개월 이내: 만기일 당시 계약기간별 고시금리×30% -6개월 초과: 만기일 당시 계약기간별 고시금리×20%\",\n  \"reason\": \"주어진 Evidence 에 따르면, 만기 후 6 개월을 초과하는 구간 (-6 개월 초과) 에는 '고시금리×20%' 가 적용됩니다. 반면, Claim 은 이 구간에서 '30%' 가 적용된다고 주장하고 있습니다. 따라서 Evidence 는 Claim 과 명시적으로 충돌합니다.\"\n}"
+    },
+    {
+      "claim_id": "p022_c01",
+      "gold_label": "INSUFFICIENT",
+      "predicted_verdict": "UNSUPPORTED",
+      "match": false,
+      "schema_valid": true,
+      "latency_seconds": 8.462,
+      "reason": "주어진 증거는 우대조건 정보가 '없음'으로 명시되어 있으며, 급여이체 시 우대금리가 추가되는 구체적인 조건이나 근거를 포함하지 않습니다. 따라서 증거는 주장을 뒷받침할 수 없으며, 명시적으로 충돌하는 것도 아닙니다.",
+      "error": null,
+      "raw_content": "{\n  \"verdict\": \"UNSUPPORTED\",\n  \"evidence\": \"IBK더굴리기통장(실세금리정기예금) 우대조건(spcl_cnd): 우대조건 정보 없음\",\n  \"reason\": \"주어진 증거는 우대조건 정보가 '없음'으로 명시되어 있으며, 급여이체 시 우대금리가 추가되는 구체적인 조건이나 근거를 포함하지 않습니다. 따라서 증거는 주장을 뒷받침할 수 없으며, 명시적으로 충돌하는 것도 아닙니다.\"\n}"
+    },
+    {
+      "claim_id": "p002_c05_3",
+      "gold_label": "UNSUPPORTED",
+      "predicted_verdict": "UNSUPPORTED",
+      "match": true,
+      "schema_valid": true,
+      "latency_seconds": 11.077,
+      "reason": "주어진 증거는 금리 범위 (3.65%~3.85%) 만을 명시하고 있으나, 보너스이율 0.1% 가 '별다른 조건 없이' '항상' 적용되는지 여부에 대한 정보는 없습니다. 따라서 증거만으로는 이 주장이 참인지 거짓인지 판단할 수 없습니다.",
+      "error": null,
+      "raw_content": "{\n  \"verdict\": \"UNSUPPORTED\",\n  \"evidence\": \"e-그린세이브예금 12 개월 옵션 — 기본금리(base_rate): 3.65%, 최고금리(max_rate): 3.85%\",\n  \"reason\": \"주어진 증거는 금리 범위 (3.65%~3.85%) 만을 명시하고 있으나, 보너스이율 0.1% 가 '별다른 조건 없이' '항상' 적용되는지 여부에 대한 정보는 없습니다. 따라서 증거만으로는 이 주장이 참인지 거짓인지 판단할 수 없습니다.\"\n}"
+    }
+  ]
+}
