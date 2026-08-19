@@ -189,9 +189,19 @@ finance_verifier/
 
 ## 다음 작업 (핸드오프 문서 기준)
 
-우선순위: **모델 로드 최우선 체크(Kanana/Qwen 분리, WSL2/Docker와 무관하게 병렬) → WSL2 GPU 확인 → Docker Desktop + WSL2 통합 → Docker GPU smoke → vLLM 공식 container smoke → 실제 후보 모델 vLLM serving → Finlife API 첫 호출 → 데이터 프로파일링 → canonical schema 초안**. 상세 체크리스트는 원본 핸드오프 문서 참조 (로컬 경로는 memory의 reference 항목 참고 — Docker 도입판 문서 포함).
+1단계(환경 구성 + raw snapshot)는 완료. 우선순위: **#5 Eval Design 관점 재검토 → #6 canonical schema / Claim metadata 확정 → Langfuse tracing 도입 → #12 Claim Decomposer → #13 Verifier Client → #14 Eval Harness(Smoke→Pilot→Dev→Test) → #15 최종 결과 정리**. 상세 체크리스트는 원본 핸드오프 문서 참조 (로컬 경로는 memory의 reference 항목 참고 — Docker 도입판 문서 포함).
 
-각 작업 블록은 GitHub 이슈로 트래킹한다: [#1](../../issues/1)(완료, repo/secret) · [#2](../../issues/2)(모델 로드 체크) · [#3](../../issues/3)(WSL2/vLLM — Docker 단계 포함하도록 범위 확장됨, 착수 시 WSL2 GPU/Docker Desktop/Docker GPU smoke/vLLM container smoke로 세분화 예정) · [#4](../../issues/4)(API 첫 호출) · [#5](../../issues/5)(데이터 프로파일링) · [#6](../../issues/6)(canonical schema) · [#7](../../issues/7)(모델 serving smoke — 심화).
+각 작업 블록은 GitHub 이슈로 트래킹한다: [#1](../../issues/1)(완료, repo/secret) · [#2](../../issues/2)(완료, 모델 로드 체크) · [#3](../../issues/3)(완료, WSL2/vLLM) · [#4](../../issues/4)(완료, API 첫 호출) · [#5](../../issues/5)(재오픈 — 데이터 프로파일링을 Eval Design 관점으로 재검토, 5개 종료 조건은 이슈 코멘트 참고) · [#6](../../issues/6)(canonical schema / Claim metadata) · [#7](../../issues/7)(모델 serving smoke — 심화) · [#12](../../issues/12)(Claim Decomposer 구현) · [#13](../../issues/13)(Verifier Client 구현) · [#14](../../issues/14)(Eval Harness 구현, 모델 선정은 이 단계의 Pilot에서 진행 — 기준은 아래 Eval 단계 섹션에 이미 정리됨) · [#15](../../issues/15)(최종 결과 정리).
+
+### Langfuse (Eval Harness 이후 도입)
+
+Claim Decomposer/Verifier 호출을 trace로 남긴다. `#5`에서 확정되는 `error_type`/`reasoning_type`/split 전략을 그대로 trace metadata로 붙인다:
+
+```
+model, prompt_version, product_id, source_field, gold, prediction, error_type, reasoning_type, dataset_split
+```
+
+별도 이슈로 트래킹하지 않고 #14(Eval Harness) 작업 범위 안에서 붙인다 — 1주 솔로 프로젝트 규모에서 별도 인프라로 분리할 정도는 아님.
 
 ## Git / 이슈 관리 방침
 
