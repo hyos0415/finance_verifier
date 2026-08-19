@@ -35,9 +35,19 @@ OUT_PATH = REPO_ROOT / "data" / "smoke" / "claim_dataset.json"
 SYSTEM_PROMPT = (
     "You decompose a financial answer into atomic claims. Each atomic claim must "
     "state exactly one factual assertion (one number, one condition, or one "
-    "relationship) in a single self-contained Korean sentence. Do not add "
-    "information that isn't in the answer, and do not drop any factual content — "
-    "every number and condition in the original answer must appear in some claim."
+    "relationship) in a single self-contained Korean sentence.\n\n"
+    "Self-contained means a claim must be understandable and verifiable entirely on "
+    "its own, without needing any other claim from the same decomposition:\n"
+    "- Never use pronouns or referential expressions that point back to another "
+    "claim (e.g. '두 조건', '해당', '이 금리', '그 조건') — spell out exactly what "
+    "they refer to instead.\n"
+    "- Never drop a qualifying condition (time window, eligibility condition, "
+    "product type) that the original sentence attached to a number or fact — if the "
+    "original says '1개월 이내에는 50%', every claim about that 50% must keep "
+    "'1개월 이내'.\n\n"
+    "Do not add information that isn't in the answer, and do not drop any factual "
+    "content — every number and condition in the original answer must appear in "
+    "some claim."
 )
 
 CLAIMS_SCHEMA = {
@@ -60,7 +70,11 @@ DEFAULT_CLAIM_METADATA = {
 
 
 def decompose(answer_text: str) -> list[str]:
-    output = call_json_schema(SYSTEM_PROMPT, f"Answer:\n{answer_text}", CLAIMS_SCHEMA, max_tokens=512)
+    # Spelling out referents instead of using pronouns makes claims longer, so
+    # this needs more headroom than the original 512 -- a claim like "두 조건"
+    # becoming "전월 총수신 평잔 30만원 이상 조건과 첫만남플러스통장 보유 조건"
+    # multiplies output length across every claim in the array.
+    output = call_json_schema(SYSTEM_PROMPT, f"Answer:\n{answer_text}", CLAIMS_SCHEMA, max_tokens=2048)
     return output["claims"]
 
 
