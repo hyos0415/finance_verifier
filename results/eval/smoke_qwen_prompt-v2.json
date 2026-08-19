@@ -400,28 +400,6 @@
       "error": null
     },
     {
-      "claim_id": "p018_c03_1",
-      "gold_label": "SUPPORTED",
-      "error_type": null,
-      "predicted_verdict": "UNSUPPORTED",
-      "schema_valid": true,
-      "latency_seconds": 7.769,
-      "reason": "증거는 200 만원 이상을 명시하고 있으나, 주장의 2 천만 원 조건과 일치하지 않습니다.",
-      "raw_content": "{\n  \"verdict\": \"UNSUPPORTED\",\n  \"evidence\": \"BNK더조은정기예금 우대조건(spcl_cnd): ①신규시 가입(재예치)금액 20백만원 이상인 경우 0.10%\",\n  \"reason\": \"증거는 200 만원 이상을 명시하고 있으나, 주장의 2 천만 원 조건과 일치하지 않습니다.\"\n}",
-      "error": null
-    },
-    {
-      "claim_id": "p018_c03_2",
-      "gold_label": "SUPPORTED",
-      "error_type": null,
-      "predicted_verdict": "UNSUPPORTED",
-      "schema_valid": true,
-      "latency_seconds": 8.834,
-      "reason": "증거에 따르면 재예치 시 200 만원 이상이면 0.10% 우대금리가 적용되지만, 2 천만원은 명시되지 않았습니다.",
-      "raw_content": "{\n  \"verdict\": \"UNSUPPORTED\",\n  \"evidence\": \"BNK더조은정기예금 우대조건(spcl_cnd): ①신규시 가입(재예치)금액 20백만원 이상인 경우 0.10%\",\n  \"reason\": \"증거에 따르면 재예치 시 200 만원 이상이면 0.10% 우대금리가 적용되지만, 2 천만원은 명시되지 않았습니다.\"\n}",
-      "error": null
-    },
-    {
       "claim_id": "p013_c01_1",
       "gold_label": "SUPPORTED",
       "error_type": null,

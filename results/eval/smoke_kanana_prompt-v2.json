@@ -3,14 +3,14 @@
   "split": "smoke",
   "complete": true,
   "metrics": {
-    "n": 65,
+    "n": 64,
     "false_accept_rate": 0.2222,
     "unsupported_recall": 0.7143,
-    "macro_f1": 0.7445,
+    "macro_f1": 0.7652,
     "schema_valid_rate": 1.0,
     "latency": {
-      "p50": 3.897,
-      "p95": 7.812
+      "p50": 3.844,
+      "p95": 7.73
     }
   },
   "predictions": [
@@ -400,28 +400,6 @@
       "error": null
     },
     {
-      "claim_id": "p018_c03_1",
-      "gold_label": "SUPPORTED",
-      "error_type": null,
-      "predicted_verdict": "UNSUPPORTED",
-      "schema_valid": true,
-      "latency_seconds": 7.812,
-      "reason": "evidence에 2천만원 이상이라는 조건이 명시되어 있지 않으므로, 주어진 증거만으로는 해당 claim을 뒷받침할 수 없다.",
-      "raw_content": "{ \"verdict\": \"UNSUPPORTED\", \"evidence\": \"evidence: BNK더조은정기예금 우대조건(spcl_cnd): ①신규시 가입(재예치)금액 20백만원 이상인 경우 0.10% ②신규시 금리우대쿠폰을 등록한 경우 0.20% ③경남은행 오픈뱅킹 서비스를 가입한 경우 0.10% (만기시까지 해당서비스 유지하는 경우) ④자동재예치를 통해 가입한 경우 0.05% (금리우대쿠폰과 중복적용 불가) ⑤신규(재예치)시 마케팅동의 및 모바일메시지 수신동의 0.10%\", \"reason\": \"evidence에 2천만원 이상이라는 조건이 명시되어 있지 않으므로, 주어진 증거만으로는 해당 claim을 뒷받침할 수 없다.\" }",
-      "error": null
-    },
-    {
-      "claim_id": "p018_c03_2",
-      "gold_label": "SUPPORTED",
-      "error_type": null,
-      "predicted_verdict": "UNSUPPORTED",
-      "schema_valid": true,
-      "latency_seconds": 6.313,
-      "reason": "evidence에 '2천만원 이상'이라는 조건이 명시되어 있지 않으므로, 해당 claim을 뒷받침하지 않는다.",
-      "raw_content": "{ \"verdict\": \"UNSUPPORTED\", \"evidence\": \"evidence: BNK더조은정기예금 우대조건(spcl_cnd): ①신규시 가입(재예치)금액 20백만원 이상인 경우 0.10% ②신규시 금리우대쿠폰을 등록한 경우 0.20% ③경남은행 오픈뱅킹 서비스를 가입한 경우 0.10% (만기시까지 해당서비스 유지하는 경우) ④자동재예치를 통해 가입한 경우 0.05% (금리우대쿠폰과 중복적용 불가) ⑤신규(재예치)시 마케팅동의 및 모바일메시지 수신동의 0.10%\", \"reason\": \"evidence에 '2천만원 이상'이라는 조건이 명시되어 있지 않으므로, 해당 claim을 뒷받침하지 않는다.\" }",
-      "error": null
-    },
-    {
       "claim_id": "p013_c01_1",
       "gold_label": "SUPPORTED",
       "error_type": null,
@@ -727,6 +705,17 @@
       "latency_seconds": 2.218,
       "reason": "evidence에 우대금리와 관련된 조건 정보가 없어 판단할 수 없다.",
       "raw_content": "{ \"verdict\": \"INSUFFICIENT\", \"evidence\": \"헤이(Hey)정기예금 우대조건(spcl_cnd): 우대조건 정보 없음\", \"reason\": \"evidence에 우대금리와 관련된 조건 정보가 없어 판단할 수 없다.\" }",
+      "error": null
+    },
+    {
+      "claim_id": "p018_c03",
+      "gold_label": "SUPPORTED",
+      "error_type": null,
+      "predicted_verdict": "SUPPORTED",
+      "schema_valid": true,
+      "latency_seconds": 3.652,
+      "reason": "Claim의 내용과 evidence의 ①이 정확히 일치하므로, 주어진 증거만으로 claim을 직접 뒷받침한다.",
+      "raw_content": "{ \"verdict\": \"SUPPORTED\", \"evidence\": \"①신규시 가입(재예치)금액 20백만원 이상인 경우 0.10%\", \"reason\": \"Claim의 내용과 evidence의 ①이 정확히 일치하므로, 주어진 증거만으로 claim을 직접 뒷받침한다.\" }",
       "error": null
     }
   ]

@@ -236,8 +236,9 @@ SCENARIOS = [
         "reasoning_type": ["numeric_threshold"],
         "insufficient_source": None,
         "instruction": (
-            "우대조건 evidence 중 신규(재예치) 가입금액이 2천만원 이상인 경우 0.10%p 우대금리가 "
-            "적용된다는 조건을 정확히 한 문장으로 답하라."
+            "우대조건 evidence 중 신규(재예치) 가입금액이 20백만원 이상인 경우 0.10%p 우대금리가 "
+            "적용된다는 조건을 evidence의 금액 표기('20백만원') 그대로 정확히 한 문장으로 답하라 — "
+            "'2천만원' 같은 다른 단위 표기로 바꿔쓰지 말 것."
         ),
     },
     {

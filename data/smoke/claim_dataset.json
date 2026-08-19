@@ -636,30 +636,11 @@
     "dataset_split": "smoke"
   },
   {
-    "claim_id": "p018_c03_1",
+    "claim_id": "p018_c03",
     "product_id": "p018",
     "source_field": "spcl_cnd",
-    "claim_text": "BNK더조은정기예금은 신규 가입 시 가입금액이 2천만원 이상이면 0.10%p의 우대금리를 추가로 받을 수 있다.",
-    "answer_text": "BNK더조은정기예금은 신규 가입 또는 재예치 시 가입금액이 2천만원 이상이면 0.10%p의 우대금리를 추가로 받으실 수 있습니다.",
-    "evidence_text": "BNK더조은정기예금 우대조건(spcl_cnd): ①신규시 가입(재예치)금액 20백만원 이상인 경우 0.10%\n②신규시 금리우대쿠폰을 등록한 경우 0.20% \n③경남은행 오픈뱅킹 서비스를 가입한 경우 0.10%\n(만기시까지 해당서비스 유지하는 경우)\n④자동재예치를 통해 가입한 경우 0.05%\n(금리우대쿠폰과 중복적용 불가)\n⑤신규(재예치)시 마케팅동의 및 모바일메시지 수신동의 0.10%",
-    "label": "SUPPORTED",
-    "error_type": null,
-    "reasoning_type": [
-      "numeric_threshold"
-    ],
-    "insufficient_source": null,
-    "needs_manual_review": false,
-    "atomicity_ok": true,
-    "coverage_ok": true,
-    "coverage_missing_numbers": [],
-    "dataset_split": "smoke"
-  },
-  {
-    "claim_id": "p018_c03_2",
-    "product_id": "p018",
-    "source_field": "spcl_cnd",
-    "claim_text": "BNK더조은정기예금은 재예치 시 가입금액이 2천만원 이상이면 0.10%p의 우대금리를 추가로 받을 수 있다.",
-    "answer_text": "BNK더조은정기예금은 신규 가입 또는 재예치 시 가입금액이 2천만원 이상이면 0.10%p의 우대금리를 추가로 받으실 수 있습니다.",
+    "claim_text": "BNK더조은정기예금은 신규 가입 시(재예치 포함) 가입금액이 20백만원 이상인 경우 0.10%p의 우대금리가 적용된다.",
+    "answer_text": "BNK더조은정기예금은 신규 가입 시(재예치 포함) 가입금액이 20백만원 이상인 경우 0.10%p의 우대금리가 적용됩니다.",
     "evidence_text": "BNK더조은정기예금 우대조건(spcl_cnd): ①신규시 가입(재예치)금액 20백만원 이상인 경우 0.10%\n②신규시 금리우대쿠폰을 등록한 경우 0.20% \n③경남은행 오픈뱅킹 서비스를 가입한 경우 0.10%\n(만기시까지 해당서비스 유지하는 경우)\n④자동재예치를 통해 가입한 경우 0.05%\n(금리우대쿠폰과 중복적용 불가)\n⑤신규(재예치)시 마케팅동의 및 모바일메시지 수신동의 0.10%",
     "label": "SUPPORTED",
     "error_type": null,
