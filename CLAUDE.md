@@ -45,7 +45,7 @@ Retrieval correctness ≠ Answer correctness — 검색이 정확한 근거를 �
 
 두 후보는 양자화 조건이 다르므로(INT4 vs BF16) 성능차를 순수 모델 차이로 해석하지 않는다. 비교 목적은 "동일 8GB GPU 환경에서 각자 신뢰 가능한 실행 경로를 썼을 때 어떤 조합이 Verifier 역할에 더 적합한가". 가능한 한 inference engine / prompt / context length / generation config / temperature / max tokens / eval dataset은 통일한다.
 
-**Qwen3.5는 기본적으로 thinking(장문 추론) 모드로 응답한다.** `apply_chat_template(..., enable_thinking=False)`를 넘기지 않으면 최종 답변 전에 영어 위주의 긴 "Thinking Process"를 생성하며(512 토큰으로도 안 끝남, 중간에 한자 혼입도 관찰됨), Verifier의 엄격한 JSON 스키마 출력과 맞지 않는다. Verifier client에서는 반드시 `enable_thinking=False`로 호출한다.
+**Qwen3.5는 기본적으로 thinking(장문 추론) 모드로 응답한다.** `apply_chat_template(..., enable_thinking=False)`를 넘기지 않으면 최종 답변 전에 영어 위주의 긴 "Thinking Process"를 생성하며(512 토큰으로도 안 끝남, 중간에 한자 혼입도 관찰됨), Verifier의 엄격한 JSON 스키마 출력과 맞지 않는다. Verifier client에서는 반드시 `enable_thinking=False`로 호출한다. **vLLM OpenAI 호환 엔드포인트로 호출할 때는** (Transformers 네이티브 `apply_chat_template` kwarg가 아니라) 요청 body에 `"chat_template_kwargs": {"enable_thinking": false}`를 넣어야 동일하게 적용된다 (#7에서 재현 확인 — 이거 없으면 80 토큰으로도 thinking 중간에 잘림).
 
 **모델 로드 체크는 순서가 중요하다.** "체크포인트가 Transformers로 로드되는가"는 WSL2/Docker 세팅과 무관하게 최우선·병렬로 바로 확인한다(리포 세팅 직후). Kanana는 이 단계에서 실패하면 후보 자체를 재검토해야 하는 리스크가 크다. **Qwen AutoRound는 Windows native Transformers에서 실패해도 바로 탈락시키지 않는다** — 모델 아키텍처 문제 / AutoRound·quantization backend 문제 / Windows backend 문제를 분리해서 보고, 최종 판단은 WSL2 + Docker + vLLM 경로에서 실제 serving 가능한지까지 확인한 뒤 내린다. "vLLM에서 이 아키텍처가 도는가"는 WSL2+Docker+vLLM 세팅 이후에 확인해도 된다 — vLLM은 미지원 아키텍처를 Transformers backend로 fallback할 수 있어서 여기서 막혀도 회복 여지가 있다.
 
