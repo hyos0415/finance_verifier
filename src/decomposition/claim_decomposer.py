@@ -138,9 +138,17 @@ def resolve_claim_metadata(scenario: dict, claims: list[str]) -> list[dict]:
 
 def main() -> None:
     answers = json.loads(ANSWERS_PATH.read_text(encoding="utf-8"))
+    existing = json.loads(OUT_PATH.read_text(encoding="utf-8")) if OUT_PATH.exists() else []
 
     dataset = []
     for scenario in answers:
+        scenario_id = scenario["claim_id"]
+        already_done = [e for e in existing if e["claim_id"] == scenario_id or e["claim_id"].startswith(scenario_id + "_")]
+        if already_done:
+            dataset.extend(already_done)
+            print(f"[decompose] {scenario_id} -> {len(already_done)} claim(s) (cached)")
+            continue
+
         claims = decompose(scenario["answer_text"])
         coverage_ok, missing_numbers = check_coverage(scenario["answer_text"], claims)
         per_claim_metadata = resolve_claim_metadata(scenario, claims)
