@@ -189,7 +189,7 @@ finance_verifier/
 
 ## 다음 작업 (핸드오프 문서 기준)
 
-1단계(환경 구성 + raw snapshot)는 완료. 우선순위: **#5 Eval Design 관점 재검토 → #6 canonical schema / Claim metadata 확정 → Langfuse tracing 도입 → #12 Claim Decomposer → #13 Verifier Client → #14 Eval Harness(Smoke→Pilot→Dev→Test) → #15 최종 결과 정리**. 상세 체크리스트는 원본 핸드오프 문서 참조 (로컬 경로는 memory의 reference 항목 참고 — Docker 도입판 문서 포함).
+1단계(환경 구성 + raw snapshot)는 완료. 우선순위: **#5 Eval Design 관점 재검토 → #6 canonical schema / Claim metadata 확정 → #7 모델 serving smoke(심화) → #12 Claim Decomposer → #13 Verifier Client → #14 Eval Harness(Smoke→Pilot→Dev→Test, Langfuse tracing 포함) → #15 최종 결과 정리**. #7이 끝나야 #13(실제 엔드포인트 필요)과 #12(LLM 호출 가능성)를 진행할 수 있다. 상세 체크리스트는 원본 핸드오프 문서 참조 (로컬 경로는 memory의 reference 항목 참고 — Docker 도입판 문서 포함).
 
 각 작업 블록은 GitHub 이슈로 트래킹한다: [#1](../../issues/1)(완료, repo/secret) · [#2](../../issues/2)(완료, 모델 로드 체크) · [#3](../../issues/3)(완료, WSL2/vLLM) · [#4](../../issues/4)(완료, API 첫 호출) · [#5](../../issues/5)(재오픈 — 데이터 프로파일링을 Eval Design 관점으로 재검토, 5개 종료 조건은 이슈 코멘트 참고) · [#6](../../issues/6)(canonical schema / Claim metadata) · [#7](../../issues/7)(모델 serving smoke — 심화) · [#12](../../issues/12)(Claim Decomposer 구현) · [#13](../../issues/13)(Verifier Client 구현) · [#14](../../issues/14)(Eval Harness 구현, 모델 선정은 이 단계의 Pilot에서 진행 — 기준은 아래 Eval 단계 섹션에 이미 정리됨) · [#15](../../issues/15)(최종 결과 정리).
 
