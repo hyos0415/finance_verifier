@@ -28,7 +28,7 @@ from src.verifier.schemas import VERIFIER_JSON_SCHEMA, VerifierOutput
 
 ENDPOINT = "http://localhost:8000/v1/chat/completions"
 TEMPERATURE = 0
-MAX_TOKENS = 300
+MAX_TOKENS = 512
 PROMPT_NAME = "verifier-system-prompt"
 
 MODEL_CONFIGS = {
@@ -49,7 +49,9 @@ SYSTEM_PROMPT = (
     "- SUPPORTED: evidence가 claim을 직접 뒷받침한다\n"
     "- UNSUPPORTED: evidence가 claim과 명시적으로 충돌한다\n"
     "- INSUFFICIENT: evidence에 판단할 정보 자체가 없다 (충돌이 아니라 정보 부재)\n\n"
-    "evidence에 없는 외부 지식을 사용하지 말고, 주어진 evidence만으로 판단하라."
+    "evidence에 없는 외부 지식을 사용하지 말고, 주어진 evidence만으로 판단하라.\n\n"
+    "reason은 반드시 한 문장, 100자 이내로 간결하게 작성하라. evidence 원문을 다시 인용하거나 "
+    "같은 근거를 여러 번 반복하지 마라."
 )
 
 

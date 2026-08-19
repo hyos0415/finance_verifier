@@ -10,7 +10,6 @@ v4's metadata is dict[str, str] only (200-char values, non-strings coerced)
 like a list (e.g. reasoning_type) into a string before passing it in.
 """
 
-import os
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -46,3 +45,15 @@ def get_or_create_prompt(name: str, default_text: str, label: str = "production"
         return langfuse.get_prompt(name, label=label)
     except Exception:
         return None
+
+
+def push_prompt_version(name: str, text: str, label: str = "production"):
+    """Push `text` as a new version of an existing (or new) prompt and label it.
+
+    get_or_create_prompt only seeds a prompt the first time it's missing --
+    use this when the local prompt text itself changed and Langfuse's stored
+    version needs to catch up.
+    """
+    langfuse = get_langfuse()
+    langfuse.create_prompt(name=name, type="text", prompt=text, labels=[label])
+    return langfuse.get_prompt(name, label=label)
