@@ -1,4 +1,4 @@
-# #14 Eval Harness — Smoke 29건 분석 (프롬프트 v1/"v0" 기준)
+# #14 Eval Harness — Smoke 29건 분석 (프롬프트 v1 → v2)
 
 `src/eval/run_eval.py`로 #12의 Smoke claim 29개 전체를 Qwen/Kanana 양쪽에 동일 조건(warm-up 제외,
 `max_tokens=512`, `temperature=0`, Langfuse Prompt Management v1)으로 돌린 결과. **아직 Pilot이
@@ -13,8 +13,30 @@ Langfuse는 버전을 1부터 매긴다. 이 리포트가 쓰는 버전은 **v1(
 
 | 버전 | 내용 | 상태 |
 |---|---|---|
-| v1 | 판정 기준만, reason 길이 제약 없음 | 이 리포트가 씀 |
-| v2 | reason 1문장·100자 이내 제약 추가 | push만 함, 미검증 |
+| v1 | 판정 기준만, reason 길이 제약 없음 | 검증 완료 (`*_prompt-v1.json`) |
+| v2 | reason 1문장·100자 이내 제약 추가 | 검증 완료 (`*_prompt-v2.json`) — 아래 참고 |
+
+## v2 검증 결과 — 29건 재실행
+
+| 지표 | Kanana v1 | Kanana v2 | Qwen v1 | Qwen v2 |
+|---|---|---|---|---|
+| False Accept Rate | 0.4444 | 0.4444 | 0.2222 | **0.1111** |
+| UNSUPPORTED Recall | 0.5 | 0.5 | 0.75 | **0.875** |
+| Macro F1 | 0.8095 | 0.8095 | 0.4667 | 0.5 |
+| Schema Valid Rate | 1.0 | 1.0 | 0.9655 | **1.0** |
+| Latency p50 / p95 | 5.95s / 8.9s | 4.51s / 7.0s | 16.7s / 36.35s | **7.22s / 14.30s** |
+
+**Kanana는 v1/v2 사이 예측이 완전히 동일하다** — 원래도 짧게 답해서 길이 제약의 영향을 안 받음, latency만
+소폭 개선.
+
+**Qwen은 전 지표가 개선됐다** — 이전에 512토큰에서도 못 끝내고 깨졌던 케이스(`p021_c01_1`)가 이번엔
+스키마 그대로 통과했고(1.0), FAR·Recall도 더 좋아졌고, 무엇보다 **latency가 p50 기준 절반 이상
+줄었다**(16.7s→7.22s) — 답변을 짧게 쓰라고 하니 생성 자체가 빨라진 것. reason 길이 제약이 "부작용
+없이 다 좋아지는" 드문 케이스였다.
+
+다만 Macro F1은 Qwen이 여전히 Kanana보다 낮다(0.5 vs 0.8095) — v1 분석에서 짚었던 "Qwen은 SUPPORTED를
+과도하게 UNSUPPORTED로 거부한다"는 패턴 자체는 프롬프트 길이 제약으로 해결되는 문제가 아니었다(오답
+패턴은 v1과 거의 동일하게 유지됨, 다만 재현성 문제인지 몇 건은 UNSUPPORTED↔SUPPORTED가 바뀌었다).
 
 ## 헤드라인 지표
 

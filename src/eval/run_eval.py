@@ -22,8 +22,8 @@ import json
 from pathlib import Path
 
 from src.eval.metrics import EvalRecord, compute_all
-from src.verifier.client import verify
-from src.verifier.langfuse_client import get_langfuse
+from src.verifier.client import PROMPT_NAME, SYSTEM_PROMPT, verify
+from src.verifier.langfuse_client import get_langfuse, get_or_create_prompt
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 CLAIM_DATASET_PATH = REPO_ROOT / "data" / "smoke" / "claim_dataset.json"
@@ -70,7 +70,9 @@ def run(model_key: str, split: str) -> dict:
     if not claims:
         raise ValueError(f"no claims found for split={split!r} in {CLAIM_DATASET_PATH}")
 
-    out_path = RESULTS_DIR / f"{split}_{model_key}.json"
+    prompt_obj = get_or_create_prompt(PROMPT_NAME, SYSTEM_PROMPT)
+    prompt_version = prompt_obj.version if prompt_obj else "unknown"
+    out_path = RESULTS_DIR / f"{split}_{model_key}_prompt-v{prompt_version}.json"
     predictions = load_checkpoint(out_path)
     done_ids = {p["claim_id"] for p in predictions}
     remaining = [c for c in claims if c["claim_id"] not in done_ids]

@@ -63,6 +63,7 @@ class VerifierResult:
     raw_content: str
     error: Optional[str]
     latency_seconds: float
+    prompt_version: Optional[int]
 
 
 def _flatten_metadata(metadata: Optional[dict]) -> dict:
@@ -114,10 +115,11 @@ def verify(evidence: str, claim: str, model_key: str, metadata: Optional[dict] =
         raw_content = response.json()["choices"][0]["message"]["content"]
         generation.update(output=raw_content)
 
+        prompt_version = prompt_obj.version if prompt_obj else None
         try:
             output = VerifierOutput.model_validate(json.loads(raw_content))
             generation.update(metadata={"schema_valid": "true", "verdict": output.verdict.value})
-            return VerifierResult(model_key, True, output, raw_content, None, latency)
+            return VerifierResult(model_key, True, output, raw_content, None, latency, prompt_version)
         except (json.JSONDecodeError, ValidationError) as e:
             generation.update(metadata={"schema_valid": "false"}, level="ERROR", status_message=str(e))
-            return VerifierResult(model_key, False, None, raw_content, str(e), latency)
+            return VerifierResult(model_key, False, None, raw_content, str(e), latency, prompt_version)
