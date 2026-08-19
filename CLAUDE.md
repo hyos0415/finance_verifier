@@ -195,13 +195,19 @@ finance_verifier/
 
 각 작업 블록은 GitHub 이슈로 트래킹한다: [#1](../../issues/1)(완료, repo/secret) · [#2](../../issues/2)(완료, 모델 로드 체크) · [#3](../../issues/3)(완료, WSL2/vLLM) · [#4](../../issues/4)(완료, API 첫 호출) · [#5](../../issues/5)(재오픈 — 데이터 프로파일링을 Eval Design 관점으로 재검토, 5개 종료 조건은 이슈 코멘트 참고) · [#6](../../issues/6)(canonical schema / Claim metadata) · [#7](../../issues/7)(모델 serving smoke — 심화) · [#12](../../issues/12)(Claim Decomposer 구현) · [#13](../../issues/13)(Verifier Client 구현) · [#14](../../issues/14)(Eval Harness 구현, 모델 선정은 이 단계의 Pilot에서 진행 — 기준은 아래 Eval 단계 섹션에 이미 정리됨) · [#15](../../issues/15)(최종 결과 정리).
 
-### Langfuse (Eval Harness 이후 도입)
+### Langfuse
 
-Claim Decomposer/Verifier 호출을 trace로 남긴다. `#5`에서 확정되는 `error_type`/`reasoning_type`/split 전략을 그대로 trace metadata로 붙인다:
+**#14 착수 직후 가장 먼저 붙였다** (metrics.py/run_eval.py보다 먼저) — 나중에 붙이면 그전에 돌린 Pilot/Dev 결과가 trace로 안 남기 때문. **Langfuse Cloud(US 리전, 기존 계정) 사용, self-host 안 함** — 데이터가 공개 Finlife 공시 데이터라 PII 이슈가 없고, self-host는 Postgres/ClickHouse/Redis가 묶인 멀티서비스 스택이라 "지금 하지 않는 것" 항목(복잡한 multi-service Docker Compose)에 걸린다.
+
+Verifier 호출(`src/verifier/client.py`)마다 Langfuse generation observation으로 trace를 남기고, 아래 metadata를 붙인다:
 
 ```
-model, prompt_version, product_id, source_field, gold, prediction, error_type, reasoning_type, dataset_split
+model, prompt_version, product_id, source_field, gold_label, error_type, reasoning_type, dataset_split
 ```
+
+- **SDK는 v4** — `get_client()`/`start_as_current_observation(as_type="generation", ...)` 패턴. metadata가 `dict[str, str]`로 제한되므로(200자, 리스트/비문자열은 깨짐) `reasoning_type` 같은 리스트는 문자열로 join해서 넣는다(`src/verifier/client.py`의 `_flatten_metadata`).
+- **prompt_version은 수동 관리 안 함** — Verifier system prompt를 Langfuse Prompt Management로 옮기고(`get_or_create_prompt`, 최초 실행 시 로컬 기본값으로 자동 시딩) `prompt=` 인자로 generation에 링크하면 `prompt_version`이 자동으로 추적된다.
+- **env**: `LANGFUSE_PUBLIC_KEY`/`LANGFUSE_SECRET_KEY`/`LANGFUSE_BASE_URL`(v4 권장 이름, 레거시 `LANGFUSE_HOST`도 동작은 함). `.env.example` 참고.
 
 별도 이슈로 트래킹하지 않고 #14(Eval Harness) 작업 범위 안에서 붙인다 — 1주 솔로 프로젝트 규모에서 별도 인프라로 분리할 정도는 아님.
 
