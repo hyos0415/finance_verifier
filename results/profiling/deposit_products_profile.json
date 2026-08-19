@@ -31,17 +31,17 @@
     "save_trm"
   ],
   "non_null_ratio": {
-    "spcl_cnd": 0.9737,
+    "spcl_cnd": 0.8421,
     "mtrt_int": 1.0,
-    "etc_note": 1.0
+    "etc_note": 0.9737
   },
   "text_length_stats": {
     "spcl_cnd": {
-      "n": 38,
-      "min": 2,
+      "n": 32,
+      "min": 3,
       "max": 221,
-      "mean": 81.0,
-      "median": 79.5,
+      "mean": 95.6,
+      "median": 109.0,
       "p90": 165
     },
     "mtrt_int": {
@@ -53,21 +53,21 @@
       "p90": 121
     },
     "etc_note": {
-      "n": 38,
-      "min": 4,
+      "n": 37,
+      "min": 9,
       "max": 140,
-      "mean": 46.9,
-      "median": 41.0,
+      "mean": 48.1,
+      "median": 41,
       "p90": 87
     }
   },
   "condition_complexity": {
     "spcl_cnd": {
-      "n": 37,
-      "and_marker_ratio": 0.162,
-      "or_marker_ratio": 0.135,
-      "and_and_or_ratio": 0.054,
-      "avg_numeric_conditions_per_text": 3.05,
+      "n": 32,
+      "and_marker_ratio": 0.188,
+      "or_marker_ratio": 0.156,
+      "and_and_or_ratio": 0.062,
+      "avg_numeric_conditions_per_text": 3.53,
       "max_numeric_conditions_in_one_text": 11
     },
     "mtrt_int": {
@@ -79,11 +79,11 @@
       "max_numeric_conditions_in_one_text": 9
     },
     "etc_note": {
-      "n": 38,
+      "n": 37,
       "and_marker_ratio": 0.0,
-      "or_marker_ratio": 0.026,
+      "or_marker_ratio": 0.027,
       "and_and_or_ratio": 0.0,
-      "avg_numeric_conditions_per_text": 1.5,
+      "avg_numeric_conditions_per_text": 1.54,
       "max_numeric_conditions_in_one_text": 6
     }
   },
@@ -258,5 +258,43 @@
     "1. 고향사랑기부금 납부고객 우대 : 0.3%p\n\n2-1. 만65세 이상 고령자 우대 : 0.1%p\n2-2. 만 19~34세 MZ고객 우대 : 0.1%p\n\n3. 고향사랑 특별금리 : 0.05%p (금리시장상황에 따라 변동 가능)\n - 고향사랑 특별금리는 상품 가입고객 모두에게 적용",
     "- 아래의 우대요건 충족시 최고 0.5%p 추가 우대 \n①비대면 채널 가입시 0.3%제공(신규시제공)  \n(단, 이벤트시 디지털 채널에 고시한 우대금리를 추가 적용할 수 있음)\n②신규일로부터 만기달 제외한 계약기간의 1/2이상 매월 Jbank로그인 시 0.2%제공(만기시제공)",
     "* 최고우대금리 : 연0.25%p\n- 가입일(재예치일)로부터 3개월 이내 아래 1가지 이상 요건 충족시\n① 당행 주택청약종합저축 보유\n② 당행 신용(체크)카드 결제실적 보유(결제금액 출금기준)\n* 해당 상품을 인터넷/모바일뱅킹을 통해 가입 : 연0.05%p"
+  ],
+  "natural_missing_spcl_cnd": [
+    {
+      "fin_prdt_cd": "WR0001B",
+      "kor_co_nm": "우리은행",
+      "fin_prdt_nm": "WON플러스예금",
+      "raw_value": "해당사항 없음"
+    },
+    {
+      "fin_prdt_cd": "01211310130",
+      "kor_co_nm": "중소기업은행",
+      "fin_prdt_nm": "IBK더굴리기통장(실세금리정기예금)",
+      "raw_value": "없음"
+    },
+    {
+      "fin_prdt_cd": "01211310142",
+      "kor_co_nm": "중소기업은행",
+      "fin_prdt_nm": "IBK굴리기통장(정기예금)",
+      "raw_value": "없음"
+    },
+    {
+      "fin_prdt_cd": "06492",
+      "kor_co_nm": "한국산업은행",
+      "fin_prdt_nm": "KDB 정기예금",
+      "raw_value": "해당없음"
+    },
+    {
+      "fin_prdt_cd": "10-003-1384-0001",
+      "kor_co_nm": "농협은행주식회사",
+      "fin_prdt_nm": "NH올원e예금",
+      "raw_value": "없음"
+    },
+    {
+      "fin_prdt_cd": "10120114700011",
+      "kor_co_nm": "수협은행",
+      "fin_prdt_nm": "헤이(Hey)정기예금",
+      "raw_value": "없음"
+    }
   ]
 }
