@@ -22,18 +22,39 @@ OUT_PATH = REPO_ROOT / "results" / "profiling" / "deposit_products_profile.json"
 
 FREE_TEXT_FIELDS = ["spcl_cnd", "mtrt_int", "etc_note"]
 
+# Finlife free-text fields use several placeholder spellings for "no info" —
+# an exact match on "해당사항 없음" alone misses "없음" / "해당없음" variants
+# and silently overcounts natural-missing samples as populated text.
+NO_INFO_PLACEHOLDERS = {"해당사항 없음", "없음", "해당없음"}
 AND_MARKERS = ["및", "동시에", "모두 충족", "각각"]
 OR_MARKERS = ["또는", "혹은", "중 하나"]
 NUMERIC_COND_PATTERN = re.compile(r"\d+(\.\d+)?\s*(%|퍼센트|만원|개월|년)")
 
 
+def is_no_info(value) -> bool:
+    return value is None or (isinstance(value, str) and value.strip() in NO_INFO_PLACEHOLDERS | {""})
+
+
 def non_null_ratio(records: list[dict], field: str) -> float:
-    non_null = sum(1 for r in records if r.get(field) not in (None, "", "해당사항 없음"))
+    non_null = sum(1 for r in records if not is_no_info(r.get(field)))
     return round(non_null / len(records), 4) if records else 0.0
 
 
+def natural_missing_products(records: list[dict], field: str) -> list[dict]:
+    return [
+        {
+            "fin_prdt_cd": r.get("fin_prdt_cd"),
+            "kor_co_nm": r.get("kor_co_nm"),
+            "fin_prdt_nm": r.get("fin_prdt_nm"),
+            "raw_value": r.get(field),
+        }
+        for r in records
+        if is_no_info(r.get(field))
+    ]
+
+
 def length_stats(records: list[dict], field: str) -> dict:
-    lengths = [len(r[field]) for r in records if r.get(field)]
+    lengths = [len(r[field]) for r in records if not is_no_info(r.get(field))]
     if not lengths:
         return {"n": 0}
     return {
@@ -47,7 +68,7 @@ def length_stats(records: list[dict], field: str) -> dict:
 
 
 def condition_complexity(records: list[dict], field: str) -> dict:
-    texts = [r[field] for r in records if r.get(field) and r[field] != "해당사항 없음"]
+    texts = [r[field] for r in records if not is_no_info(r.get(field))]
     if not texts:
         return {"n": 0}
     has_and = sum(1 for t in texts if any(m in t for m in AND_MARKERS))
@@ -130,7 +151,7 @@ def main() -> None:
     option_counts = [len(v) for v in options_by_product.values()]
 
     complex_examples = sorted(
-        (r["spcl_cnd"] for r in base_list if r.get("spcl_cnd") and r["spcl_cnd"] != "해당사항 없음"),
+        (r["spcl_cnd"] for r in base_list if not is_no_info(r.get("spcl_cnd"))),
         key=len,
         reverse=True,
     )[:10]
@@ -154,6 +175,7 @@ def main() -> None:
         "rate_distribution_by_term_months": rate_distribution(option_list),
         "per_bank_rollup": per_bank_rollup(base_list, options_by_product),
         "complex_condition_examples": complex_examples,
+        "natural_missing_spcl_cnd": natural_missing_products(base_list, "spcl_cnd"),
     }
 
     OUT_PATH.parent.mkdir(parents=True, exist_ok=True)
