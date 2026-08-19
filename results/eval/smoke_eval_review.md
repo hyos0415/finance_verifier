@@ -89,12 +89,49 @@ system prompt가 "각 claim은 self-contained해야 한다"고 명시했는데�
 이 결함을 못 잡았다 — **조건어(시점/조건부 표현)가 원문에서 살아남았는지까지 확인하는 체크가 없다는
 뜻**.
 
+## #12 self-containment fix 이후 재실행 (27건) + failure_analysis.py
+
+`claim_decomposer.py`의 self-containment 결함(대명사/지시어, 시점조건 누락)을 고치고 나서 29→27개
+claim으로 갱신, 같은 prompt v2로 재실행했다(#12 PR 코멘트에 헤드라인 지표 비교 있음). 그 위에
+`src/eval/failure_analysis.py`를 만들어 오답을 false accept(error_type별)/false reject
+(reasoning_type별)로 나눠 분석했다.
+
+### Qwen — false accept 1건, false reject 1건으로 수렴
+
+```
+false_accepts: p002_c04_3 (condition_omission)
+false_rejects: p022_c01_1 (reasoning_type 없음)
+insufficient_labeled_unsupported: p022_c01_2
+```
+
+v1/v2 분석에서 짚었던 "Qwen이 SUPPORTED를 과도하게 UNSUPPORTED로 거부한다"는 패턴이 **self-containment
+수정만으로 사실상 사라졌다** — 대명사/지시어 때문에 판단 불가능했던 claim들이 실제 원인이었다는 뜻.
+남은 오답 2건은 성격이 다르다: `p002_c04_3`(조건 누락)은 두 모델 다 놓치는 진짜 어려운 케이스,
+`p022_c01_1`은 애초에 evidence(spcl_cnd)에 없는 사실(상품 종류)을 묻는 골드 라벨 자체가 의심스러운
+케이스(#12에서 이미 재검토 대상으로 표시함). **v3(reason 과잉거부 완화 프롬프트)는 지금 불필요해
+보인다** — 겨냥할 구체적 대상이 사라졌다.
+
+INSUFFICIENT를 UNSUPPORTED로 잘못 판정하는 패턴(`p022_c01_2`)만 여전히 남아 있다 — 이건 프롬프트
+길이 문제도 self-containment 문제도 아닌, Qwen 고유의 SUPPORTED/UNSUPPORTED/INSUFFICIENT 경계
+처리 특성으로 보인다.
+
+### Kanana — false accept 3건이 정확히 error_type별로 갈림
+
+```
+false_accepts: p003_c02_4(condition_reversal), p002_c04_3(condition_omission), p021_c01_4(boundary_condition_error)
+false_rejects: p003_c01_3(reasoning_type=any_of), p022_c01_1(reasoning_type 없음)
+```
+
+false accept가 조건 반전/누락/구간 오류 각각 정확히 1건씩 — "논리·숫자 구간을 세밀하게 비교해야
+잡히는 케이스를 체급 때문에 놓친다"는 가설과 정확히 일치한다. false reject 중 하나(`p003_c01_3`)는
+`any_of`(OR 조건) — self-containment 수정으로 문장이 길고 복잡해지면서 새로 놓치게 된 케이스.
+
 ## 다음 단계로 넘길 것
 
-1. **prompt v2(reason 길이 제약)를 아직 검증 안 함** — 다음 작업으로 실제 재실행해서 스키마 실패가
-   줄어드는지 확인 필요.
-2. **`p001_c01_2`는 Claim Dataset 결함**으로 재분류 후보 — Pilot 규모로 갈 때 #12의 Coverage 체크에
-   "조건어 보존" 여부까지 추가하는 걸 검토 (숫자만 보는 지금 체크로는 이런 케이스를 못 잡음).
-3. **`p002_c04_4`(조건 누락)는 두 모델 다 놓친 진짜 어려운 케이스** — Pilot 표본에 이런 "부분 인용 +
+1. **`p022_c01_1` 골드 라벨 재검토** — evidence(spcl_cnd)에 없는 사실을 묻는 claim이 왜 생겼는지,
+   자동 라벨링 규칙을 이 케이스에 맞게 보완할지 결정 필요.
+2. **`p002_c04_3`(조건 누락)은 두 모델 다 놓친 진짜 어려운 케이스** — Pilot 표본에 이런 "부분 인용 +
    조건 생략" 유형을 더 포함해서 재현되는 패턴인지 확인할 가치 있음.
-4. Kanana="loose"/Qwen="strict" 패턴이 29건 밖에서도 재현되는지 Pilot(30~50개)에서 검증.
+3. Kanana="loose"/Qwen="strict"(INSUFFICIENT↔UNSUPPORTED 혼동 포함) 패턴이 27건 밖에서도 재현되는지
+   Pilot(30~50개)에서 검증.
+4. v3 프롬프트는 보류 — 필요해지면 그때 구체적 타겟을 다시 잡는다.
