@@ -205,7 +205,8 @@ def load_product_evidence(canonical: list[dict], product_id: str, source_field: 
             f"최고금리(max_rate): {opt_12m['max_rate']}%"
         )
     if source_field == "spcl_cnd":
-        return f"{product['product_name']} 우대조건(spcl_cnd): {product['spcl_cnd']!r}"
+        spcl_cnd = product["spcl_cnd"] if product["spcl_cnd"] is not None else "우대조건 정보 없음"
+        return f"{product['product_name']} 우대조건(spcl_cnd): {spcl_cnd}"
     if source_field == "mtrt_int":
         return f"{product['product_name']} 만기후이자(mtrt_int): {product['mtrt_int']}"
     if "+" in source_field:
