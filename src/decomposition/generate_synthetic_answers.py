@@ -33,9 +33,16 @@ ANSWER_SCHEMA = {
     "additionalProperties": False,
 }
 
-# Each scenario: which product/field to draw evidence from, the intended gold
-# label (known upfront because we control the injected error), and the
-# instruction Claude follows to phrase it.
+# Each scenario deliberately injects at most one wrong fact into an otherwise
+# faithful answer (or none, for a pure SUPPORTED case). Compound answers
+# (conditions, multi-bucket mtrt_int) genuinely decompose into several
+# independent atomic claims — the injected error lives in exactly one (or a
+# couple) of them, and every other decomposed claim is a faithful restatement
+# of evidence. `error_match` (alternate keywords/phrasings — a claim matches
+# if ANY appear) identifies which decomposed claim(s) carry the injected
+# error; anything else defaults to SUPPORTED. Only meaningful when error_type
+# is not None. List more than one phrasing when the model may paraphrase the
+# injected error differently across claims (e.g. "보너스" vs "0.1%").
 SCENARIOS = [
     {
         "claim_id": "p002_c01",
@@ -43,6 +50,7 @@ SCENARIOS = [
         "source_field": "options_12m_base_rate",
         "label": "SUPPORTED",
         "error_type": None,
+        "error_match": [],
         "reasoning_type": ["numeric_threshold"],
         "insufficient_source": None,
         "instruction": (
@@ -56,6 +64,7 @@ SCENARIOS = [
         "source_field": "options_12m_base_rate",
         "label": "UNSUPPORTED",
         "error_type": "base_vs_max_rate",
+        "error_match": ["3.85"],
         "reasoning_type": ["numeric_threshold"],
         "insufficient_source": None,
         "instruction": (
@@ -69,6 +78,7 @@ SCENARIOS = [
         "source_field": "options_12m_base_rate",
         "label": "UNSUPPORTED",
         "error_type": "numeric_error",
+        "error_match": ["4.5"],
         "reasoning_type": ["numeric_threshold"],
         "insufficient_source": None,
         "instruction": (
@@ -82,6 +92,7 @@ SCENARIOS = [
         "source_field": "spcl_cnd",
         "label": "SUPPORTED",
         "error_type": None,
+        "error_match": [],
         "reasoning_type": ["any_of"],
         "insufficient_source": None,
         "instruction": (
@@ -96,6 +107,7 @@ SCENARIOS = [
         "source_field": "spcl_cnd",
         "label": "UNSUPPORTED",
         "error_type": "condition_reversal",
+        "error_match": ["동시에"],
         "reasoning_type": ["any_of"],
         "insufficient_source": None,
         "instruction": (
@@ -110,6 +122,7 @@ SCENARIOS = [
         "source_field": "spcl_cnd",
         "label": "UNSUPPORTED",
         "error_type": "condition_omission",
+        "error_match": ["보너스"],
         "reasoning_type": ["all_of"],
         "insufficient_source": None,
         "instruction": (
@@ -125,6 +138,7 @@ SCENARIOS = [
         "source_field": "mtrt_int",
         "label": "SUPPORTED",
         "error_type": None,
+        "error_match": [],
         "reasoning_type": ["temporal_scope"],
         "insufficient_source": None,
         "instruction": (
@@ -138,6 +152,7 @@ SCENARIOS = [
         "source_field": "mtrt_int",
         "label": "UNSUPPORTED",
         "error_type": "boundary_condition_error",
+        "error_match": ["초과하는"],
         "reasoning_type": ["temporal_scope", "numeric_threshold"],
         "insufficient_source": None,
         "instruction": (
@@ -152,6 +167,7 @@ SCENARIOS = [
         "source_field": "spcl_cnd",
         "label": "INSUFFICIENT",
         "error_type": "missing_information",
+        "error_match": ["급여이체"],
         "reasoning_type": [],
         "insufficient_source": "natural_missing",
         "instruction": (
@@ -164,8 +180,9 @@ SCENARIOS = [
         "claim_id": "p002_c05",
         "product_id": "p002",
         "source_field": "options_12m_base_rate+spcl_cnd",
-        "label": "MIXED",
+        "label": "UNSUPPORTED",
         "error_type": "conditional_benefit_generalization",
+        "error_match": ["보너스", "0.1%"],
         "reasoning_type": ["all_of"],
         "insufficient_source": None,
         "instruction": (

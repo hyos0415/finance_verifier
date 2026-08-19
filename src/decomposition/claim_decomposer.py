@@ -6,13 +6,17 @@ check만"):
   - Coverage: does every number/percentage in the original answer survive into
     at least one decomposed claim?
 
-Metadata (label/error_type/reasoning_type) is known from generation time
-(#12's generate_synthetic_answers.py controls what was injected) and is
-carried onto each decomposed claim. When decomposition doesn't cleanly map
-1:1 to what was intended (more claims came out than expected, or a scenario
-was deliberately multi-claim), MIXED_SUB_CLAIM_RULES resolves per-claim
-metadata by keyword match; anything left ambiguous is flagged for review
-rather than silently guessed.
+Metadata resolution assumes each scenario injects at most one wrong fact into
+an otherwise faithful answer: any decomposed claim matching the scenario's
+`error_match` keywords gets the scenario's label/error_type; every other
+claim is a faithful restatement of evidence and defaults to SUPPORTED. This
+replaced an earlier "answer = one claim = one label" assumption that broke
+the moment a compound answer (AND/OR conditions, multi-bucket mtrt_int)
+decomposed into several independently-verifiable atomic claims — most
+Level-2 answers do exactly that, so it wasn't an edge case to special-case,
+it was the wrong default. Only when the injected error can't be found in any
+decomposed claim (error_match matches nothing) do we flag the whole scenario
+for manual review rather than guess.
 
 Usage:
     python -m src.decomposition.claim_decomposer
@@ -46,24 +50,12 @@ CLAIMS_SCHEMA = {
 NUMERIC_PATTERN = re.compile(r"\d+(\.\d+)?\s*(%|퍼센트|만원|억원|개월|년)")
 SENTENCE_END_PATTERN = re.compile(r"(다|음|니다)\.")
 
-# Only scenarios deliberately built as multi-claim need per-claim metadata
-# rules; everything else expects a single decomposed claim carrying the
-# scenario's top-level metadata straight through.
-MIXED_SUB_CLAIM_RULES = {
-    "p002_c05": [
-        {
-            "match": ["3.65", "기본금리"],
-            "label": "SUPPORTED",
-            "error_type": None,
-            "reasoning_type": ["numeric_threshold"],
-        },
-        {
-            "match": ["보너스", "0.1"],
-            "label": "UNSUPPORTED",
-            "error_type": "conditional_benefit_generalization",
-            "reasoning_type": ["all_of"],
-        },
-    ]
+DEFAULT_CLAIM_METADATA = {
+    "label": "SUPPORTED",
+    "error_type": None,
+    "reasoning_type": [],
+    "insufficient_source": None,
+    "needs_manual_review": False,
 }
 
 
@@ -85,44 +77,49 @@ def check_coverage(original_text: str, claims: list[str]) -> tuple[bool, list[st
     return len(missing) == 0, missing
 
 
-def resolve_claim_metadata(scenario: dict, claim_text: str, num_claims: int) -> dict:
-    rules = MIXED_SUB_CLAIM_RULES.get(scenario["claim_id"])
-    if rules:
-        for rule in rules:
-            if all(kw in claim_text for kw in rule["match"]):
-                return {
-                    "label": rule["label"],
-                    "error_type": rule["error_type"],
-                    "reasoning_type": rule["reasoning_type"],
-                    "insufficient_source": None,
-                    "needs_manual_review": False,
-                }
-        return {
-            "label": None,
-            "error_type": None,
-            "reasoning_type": [],
-            "insufficient_source": None,
-            "needs_manual_review": True,
-        }
+def resolve_claim_metadata(scenario: dict, claims: list[str]) -> list[dict]:
+    """One metadata dict per claim in `claims`, same order.
 
-    if num_claims == 1:
-        return {
+    error_type is None -> every claim is faithful, all get the scenario's own
+    (SUPPORTED) label. Otherwise the scenario's label/error_type apply only to
+    claims matching error_match; everything else defaults to SUPPORTED. If
+    error_match matches nothing at all, the injected error didn't survive
+    decomposition recognizably — flag every claim instead of guessing which
+    one (if any) is actually wrong.
+    """
+    if scenario["error_type"] is None:
+        return [
+            {
+                "label": scenario["label"],
+                "error_type": None,
+                "reasoning_type": scenario["reasoning_type"],
+                "insufficient_source": scenario["insufficient_source"],
+                "needs_manual_review": False,
+            }
+            for _ in claims
+        ]
+
+    error_match = scenario["error_match"]
+    matches = [any(kw in claim_text for kw in error_match) for claim_text in claims]
+
+    if not any(matches):
+        return [
+            {"label": None, "error_type": None, "reasoning_type": [], "insufficient_source": None,
+             "needs_manual_review": True}
+            for _ in claims
+        ]
+
+    return [
+        {
             "label": scenario["label"],
             "error_type": scenario["error_type"],
             "reasoning_type": scenario["reasoning_type"],
             "insufficient_source": scenario["insufficient_source"],
             "needs_manual_review": False,
         }
-
-    # Decomposition split a claim we expected to stay atomic — flag it rather
-    # than guess which sub-claim inherits the scenario's gold label.
-    return {
-        "label": scenario["label"],
-        "error_type": scenario["error_type"],
-        "reasoning_type": scenario["reasoning_type"],
-        "insufficient_source": scenario["insufficient_source"],
-        "needs_manual_review": True,
-    }
+        if matched else dict(DEFAULT_CLAIM_METADATA)
+        for matched in matches
+    ]
 
 
 def main() -> None:
@@ -132,9 +129,9 @@ def main() -> None:
     for scenario in answers:
         claims = decompose(scenario["answer_text"])
         coverage_ok, missing_numbers = check_coverage(scenario["answer_text"], claims)
+        per_claim_metadata = resolve_claim_metadata(scenario, claims)
 
-        for i, claim_text in enumerate(claims, start=1):
-            metadata = resolve_claim_metadata(scenario, claim_text, len(claims))
+        for i, (claim_text, metadata) in enumerate(zip(claims, per_claim_metadata), start=1):
             dataset.append({
                 "claim_id": f"{scenario['claim_id']}_{i}" if len(claims) > 1 else scenario["claim_id"],
                 "product_id": scenario["product_id"],
