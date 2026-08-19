@@ -17,6 +17,8 @@ Retrieval correctness ≠ Answer correctness — 검색이 정확한 근거를 �
 - Claim Decomposition은 나중으로 미루지 않고 현재 파이프라인에 포함한다. 최소 sanity check만: **Atomicity**(claim 하나에 사실판단 하나), **Coverage**(원 answer의 주요 주장 누락 여부).
 - Verifier는 새 답변을 생성하지 않는다. `(Evidence, Atomic Claim)`을 받아 근거 관계만 판정한다.
 - Component Eval(Gold Claim → Verifier)과 End-to-End Eval(Answer → Decomposer → Verifier)을 구분해서 본다.
+- **Claim Decomposer는 로컬 SLM(Qwen/Kanana)이 아니라 Claude API(`claude-sonnet-5`)로 돈다.** 로컬 GPU는 RAM 여유가 없고, Verifier 후보 모델의 분해 태스크 성능도 검증되지 않아 별도 호출로 분리했다(#12). Claim Dataset용 synthetic 답변 증강도 동일하게 Claude API를 쓴다. `ANTHROPIC_API_KEY`를 `.env`에 `FINLIFE_API_KEY`와 같은 방식으로 저장한다(API Key 보안 원칙 동일 적용 — 로그/커밋에 노출 금지).
+- **답변 1개가 여러 개의 독립적인 atomic claim으로 쪼개지는 건 예외가 아니라 정상이다.** 특히 Level 2(조건문 — spcl_cnd의 AND/OR, mtrt_int의 구간)는 실제로 이렇게 쪼개지는 게 기본값이다(#12에서 확인). 그래서 "답변 1개 = claim 1개 = gold label 1개"로 가정하면 안 되고, 답변에 주입한 오류가 어느 atomic claim에 해당하는지 식별해서 그 claim에만 label을 붙이고 나머지는 evidence를 충실히 반영한 SUPPORTED가 기본값이 되도록 설계한다.
 
 ## Verifier 출력 스키마
 

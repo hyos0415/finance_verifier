@@ -1,0 +1,166 @@
+[
+  {
+    "claim_id": "p002_c01",
+    "product_id": "p002",
+    "source_field": "options_12m_base_rate",
+    "label": "SUPPORTED",
+    "error_type": null,
+    "error_match": [],
+    "reasoning_type": [
+      "numeric_threshold"
+    ],
+    "insufficient_source": null,
+    "instruction": "12개월 정기예금의 기본금리를 evidence 그대로 정확히 한 문장으로 답하라 (기본금리 3.65%).",
+    "evidence_text": "e-그린세이브예금 12개월 옵션 — 기본금리(base_rate): 3.65%, 최고금리(max_rate): 3.85%",
+    "answer_text": "e-그린세이브예금 12개월 옵션의 기본금리는 3.65%입니다."
+  },
+  {
+    "claim_id": "p002_c02",
+    "product_id": "p002",
+    "source_field": "options_12m_base_rate",
+    "label": "UNSUPPORTED",
+    "error_type": "base_vs_max_rate",
+    "error_match": [
+      "3.85"
+    ],
+    "reasoning_type": [
+      "numeric_threshold"
+    ],
+    "insufficient_source": null,
+    "instruction": "12개월 정기예금의 '기본금리'를 묻는 질문에 답하되, 실제 기본금리(3.65%)가 아니라 최고금리(3.85%)를 기본금리인 것처럼 한 문장으로 답하라.",
+    "evidence_text": "e-그린세이브예금 12개월 옵션 — 기본금리(base_rate): 3.65%, 최고금리(max_rate): 3.85%",
+    "answer_text": "e-그린세이브예금 12개월 옵션의 기본금리는 3.85%입니다."
+  },
+  {
+    "claim_id": "p002_c03",
+    "product_id": "p002",
+    "source_field": "options_12m_base_rate",
+    "label": "UNSUPPORTED",
+    "error_type": "numeric_error",
+    "error_match": [
+      "4.5"
+    ],
+    "reasoning_type": [
+      "numeric_threshold"
+    ],
+    "insufficient_source": null,
+    "instruction": "12개월 정기예금의 기본금리를 묻는 질문에 답하되, evidence에 없는 임의의 다른 숫자(연 4.5%)를 기본금리인 것처럼 한 문장으로 답하라.",
+    "evidence_text": "e-그린세이브예금 12개월 옵션 — 기본금리(base_rate): 3.65%, 최고금리(max_rate): 3.85%",
+    "answer_text": "e-그린세이브예금 12개월 옵션의 기본금리는 연 4.5%입니다."
+  },
+  {
+    "claim_id": "p003_c01",
+    "product_id": "p003",
+    "source_field": "spcl_cnd",
+    "label": "SUPPORTED",
+    "error_type": null,
+    "error_match": [],
+    "reasoning_type": [
+      "any_of"
+    ],
+    "insufficient_source": null,
+    "instruction": "우대조건 evidence의 첫 번째 항목(전월 총수신 평잔 30만원 이상 '또는' 첫만남플러스통장 보유 — 둘 중 하나만 충족해도 0.10%p 우대)을 정확히 한 문장으로 설명하라. '또는' 관계를 그대로 유지할 것.",
+    "evidence_text": "iM함께예금 우대조건(spcl_cnd): '* 최고우대금리: 연0.45%p\\n- 전월 총수신 평잔 30만원 이상 또는 상품 가입 전 첫만남플러스통장 보유\\n- 상품 가입 전 당행 주택청약상품 보유\\n- 신규일 \"iM함께적금\" 동시 가입 및 만기(12회 불입) 보유 \\n- 당행 오픈뱅킹서비스에 다른 은행 계좌 등록\\n각 연0.10%p                       \\n* 해당 상품을 인터넷/모바일뱅킹을 통해 가입: 연0.05%p'",
+    "answer_text": "iM함께예금의 우대조건 중 하나는, 전월 총수신 평잔이 30만원 이상이거나 혹은 상품 가입 전에 첫만남플러스통장을 보유하고 계신 경우, 둘 중 하나만 충족하셔도 연 0.10%p의 우대금리를 받으실 수 있습니다."
+  },
+  {
+    "claim_id": "p003_c02",
+    "product_id": "p003",
+    "source_field": "spcl_cnd",
+    "label": "UNSUPPORTED",
+    "error_type": "condition_reversal",
+    "error_match": [
+      "동시에"
+    ],
+    "reasoning_type": [
+      "any_of"
+    ],
+    "insufficient_source": null,
+    "instruction": "우대조건 evidence의 첫 번째 항목(전월 총수신 평잔 30만원 이상 '또는' 첫만남플러스통장 보유 — 둘 중 하나만 충족해도 0.10%p 우대)을 설명하되, '또는'을 '그리고(동시에 둘 다 충족해야)'로 바꿔서 한 문장으로 답하라.",
+    "evidence_text": "iM함께예금 우대조건(spcl_cnd): '* 최고우대금리: 연0.45%p\\n- 전월 총수신 평잔 30만원 이상 또는 상품 가입 전 첫만남플러스통장 보유\\n- 상품 가입 전 당행 주택청약상품 보유\\n- 신규일 \"iM함께적금\" 동시 가입 및 만기(12회 불입) 보유 \\n- 당행 오픈뱅킹서비스에 다른 은행 계좌 등록\\n각 연0.10%p                       \\n* 해당 상품을 인터넷/모바일뱅킹을 통해 가입: 연0.05%p'",
+    "answer_text": "iM함께예금의 우대조건 중 하나로, 전월 총수신 평잔이 30만원 이상이면서 동시에 상품 가입 전 첫만남플러스통장을 보유하고 계셔야 연 0.10%p의 우대금리가 적용됩니다."
+  },
+  {
+    "claim_id": "p002_c04",
+    "product_id": "p002",
+    "source_field": "spcl_cnd",
+    "label": "UNSUPPORTED",
+    "error_type": "condition_omission",
+    "error_match": [
+      "보너스"
+    ],
+    "reasoning_type": [
+      "all_of"
+    ],
+    "insufficient_source": null,
+    "instruction": "우대조건 evidence의 두 번째 항목은 만기일에 (a) 6~12개월제 5천만원 이상 가입 그리고 (b) 펀드 3천만원 이상 보유, 두 조건을 '모두' 충족해야 보너스이율 0.1%가 적용된다. 이 중 (a) 조건만 언급하고 (b) 펀드 보유 조건은 빼서, 5천만원 이상 가입만 하면 보너스이율을 받을 수 있는 것처럼 한 문장으로 답하라.",
+    "evidence_text": "e-그린세이브예금 우대조건(spcl_cnd): '1.SC제일은행 최초 거래 신규고객 우대이율 제공(보너스이율0.1%)                     \\n2.만기일에 아래의 조건을 모두 충족하는 경우보너스이율 제공\\n-6~12개월제(만기일시지급식) 5천만원 이상 가입\\n-만기일 기준 전전월 마지막 영업일에 수익증권(펀드)*을 3천만원 이상 보유 \\n(가입기간: 6개월~1년제/ 보너스이율:0.1% / 만기해약하는 경우에 한해 보너스이율을 적용함)'",
+    "answer_text": "e-그린세이브예금은 6~12개월제(만기일시지급식)로 5천만원 이상 가입하시면 만기일에 보너스이율 0.1%가 적용됩니다."
+  },
+  {
+    "claim_id": "p001_c01",
+    "product_id": "p001",
+    "source_field": "mtrt_int",
+    "label": "SUPPORTED",
+    "error_type": null,
+    "error_match": [],
+    "reasoning_type": [
+      "temporal_scope"
+    ],
+    "insufficient_source": null,
+    "instruction": "만기후이자 evidence 그대로, 만기 후 1개월 이내에 해지하면 만기시점 약정이율의 몇 %가 적용되는지 정확히 한 문장으로 답하라 (50%).",
+    "evidence_text": "WON플러스예금 만기후이자(mtrt_int): 만기 후\n- 1개월이내 : 만기시점약정이율×50%\n- 1개월초과 6개월이내: 만기시점약정이율×30%\n- 6개월초과 : 만기시점약정이율×20%\n\n※ 만기시점 약정이율 : 일반정기예금 금리",
+    "answer_text": "WON플러스예금은 만기 후 1개월 이내에 해지하실 경우, 만기시점 약정이율(일반정기예금 금리)의 50%가 만기후이자로 적용됩니다."
+  },
+  {
+    "claim_id": "p021_c01",
+    "product_id": "p021",
+    "source_field": "mtrt_int",
+    "label": "UNSUPPORTED",
+    "error_type": "boundary_condition_error",
+    "error_match": [
+      "초과하는"
+    ],
+    "reasoning_type": [
+      "temporal_scope",
+      "numeric_threshold"
+    ],
+    "insufficient_source": null,
+    "instruction": "만기후이자 evidence는 만기 후 '6개월 초과' 구간에 계약기간별 고시금리의 20%가 적용된다고 되어 있다. 이 20%를 '1개월 초과 6개월 이내' 구간에 적용되는 값(30%)과 바꿔서, 6개월 초과 구간에도 30%가 적용되는 것처럼 한 문장으로 답하라.",
+    "evidence_text": "IBK평생한가족통장(실세금리정기예금) 만기후이자(mtrt_int): 만기일 당시 정기예금 만기후 이자율 적용 -1개월 이내: 만기일 당시 계약기간별 고시금리×50% -1월 초과 6개월 이내: 만기일 당시 계약기간별 고시금리×30% -6개월 초과: 만기일 당시 계약기간별 고시금리×20%",
+    "answer_text": "IBK평생한가족통장(실세금리정기예금)의 만기후이자는 만기일 당시 정기예금 만기후 이자율이 적용되는데요, 만기 후 1개월 이내에는 계약기간별 고시금리의 50%, 1개월 초과 6개월 이내 구간에는 30%가 적용되고, 6개월을 초과하는 구간에도 동일하게 계약기간별 고시금리의 30%가 적용됩니다."
+  },
+  {
+    "claim_id": "p022_c01",
+    "product_id": "p022",
+    "source_field": "spcl_cnd",
+    "label": "INSUFFICIENT",
+    "error_type": "missing_information",
+    "error_match": [
+      "급여이체"
+    ],
+    "reasoning_type": [],
+    "insufficient_source": "natural_missing",
+    "instruction": "이 상품은 우대조건(spcl_cnd) 정보 자체가 없다(evidence: 없음). 그런데도 '급여이체를 하면 우대금리를 추가로 받을 수 있다'고 한 문장으로 답하라 — 실제로는 해당 정보가 없다는 사실은 언급하지 말고, 질문에 그냥 답하는 것처럼 써라.",
+    "evidence_text": "IBK더굴리기통장(실세금리정기예금) 우대조건(spcl_cnd): None",
+    "answer_text": "네, IBK더굴리기통장(실세금리정기예금)은 급여이체를 하시면 우대금리를 추가로 받으실 수 있습니다."
+  },
+  {
+    "claim_id": "p002_c05",
+    "product_id": "p002",
+    "source_field": "options_12m_base_rate+spcl_cnd",
+    "label": "UNSUPPORTED",
+    "error_type": "conditional_benefit_generalization",
+    "error_match": [
+      "보너스",
+      "0.1%"
+    ],
+    "reasoning_type": [
+      "all_of"
+    ],
+    "insufficient_source": null,
+    "instruction": "두 가지를 한 답변에 모두 포함하되 각각 두 문장으로 나눠 써라. (1) 12개월 정기예금 기본금리는 evidence 그대로 정확히 서술 (3.65%). (2) 두 번째 우대조건(만기일에 6~12개월제 5천만원 이상 가입 '그리고' 펀드 3천만원 이상 보유를 모두 충족해야 보너스이율 0.1%)을, 마치 아무 조건 없이 이 상품에 가입만 하면 보너스이율 0.1%가 항상 적용되는 것처럼 일반화해서 서술.",
+    "evidence_text": "e-그린세이브예금 12개월 옵션 — 기본금리(base_rate): 3.65%, 최고금리(max_rate): 3.85%",
+    "answer_text": "e-그린세이브예금 12개월형의 기본금리는 3.65%입니다. 이는 우대조건과 무관하게 적용되는 기본 이율이므로 정확히 참고하시면 됩니다. 그리고 이 상품은 별다른 조건 없이 가입만 하시면 보너스이율 0.1%가 항상 적용되어 실질적으로 더 높은 금리 혜택을 받으실 수 있습니다. 따라서 e-그린세이브예금에 가입하시는 모든 고객님께 자동으로 0.1%의 추가 이율이 제공된다고 이해하시면 됩니다."
+  }
+]

@@ -94,9 +94,16 @@ mutually_exclusive_ignored             신규 후보이나 표본 1건 — hard/
 
 Product-level split 채택 — 하나의 `fin_prdt_cd`에서 나온 Claim은 전부 동일 split에 배정한다.
 상품 수가 38개로 작으므로, split 확정 후 class/error_type 분포가 한쪽으로 쏠리지 않는지
-Claim Dataset Builder(#6) 단계에서 실제로 확인한다.
+Claim Dataset Builder(#12) 단계에서 실제로 확인한다.
 
-## Claim Dataset Metadata 스키마 (초안)
+## Claim Dataset Metadata 스키마 (초안 — #12에서 실제 구현된 스키마로 대체됨)
+
+아래는 이 문서 작성 시점의 초안이다. **실제로 #12(Claim Decomposer)에서 구현된 스키마는 이것과
+다르다** — `difficulty_features`는 만들지 않았고, 대신 decompose 과정 자체를 검증하는 필드
+(`claim_text`/`answer_text`/`evidence_text`/`atomicity_ok`/`coverage_ok`/`coverage_missing_numbers`/
+`needs_manual_review`)가 추가됐다. 최신 스키마와 설계 근거는
+[claim_decomposer_smoke_review.md](../decomposition/claim_decomposer_smoke_review.md)를 참고할 것
+— 아래 블록은 역사적 초안으로만 남겨둔다.
 
 ```json
 {
@@ -119,7 +126,9 @@ Claim Dataset Builder(#6) 단계에서 실제로 확인한다.
 ```
 
 `difficulty`는 임의 점수로 바로 정의하지 않고, 위 `difficulty_features`를 관찰 가능한 값으로
-먼저 저장한 뒤 Pilot/Dev 단계에서 실제 모델 성능을 보고 버킷화한다.
+먼저 저장한 뒤 Pilot/Dev 단계에서 실제 모델 성능을 보고 버킷화한다는 아이디어 자체는 유효하다 —
+다만 `difficulty_features` 필드를 실제로 채우는 건 #12에서 하지 않았으므로, Pilot 규모로 갈 때
+다시 검토가 필요하다.
 
 ## 종료 조건 체크
 
