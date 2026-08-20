@@ -1,0 +1,381 @@
+{
+  "model": "qwen",
+  "split": "test",
+  "complete": true,
+  "metrics": {
+    "n": 33,
+    "false_accept_rate": 0.0556,
+    "unsupported_recall": 0.9375,
+    "macro_f1": 0.8573,
+    "schema_valid_rate": 1.0,
+    "latency": {
+      "p50": 8.856,
+      "p95": 13.836
+    }
+  },
+  "predictions": [
+    {
+      "claim_id": "p004_c01",
+      "gold_label": "SUPPORTED",
+      "error_type": null,
+      "predicted_verdict": "SUPPORTED",
+      "schema_valid": true,
+      "latency_seconds": 13.149,
+      "reason": "증거에 따르면 가입일로부터 3 개월 이내에 주택청약종합저축 또는 체크카드 결제실적 중 하나라도 충족하면 최고우대금리인 연 0.25%p가 적용된다.",
+      "raw_content": "{\n  \"verdict\": \"SUPPORTED\",\n  \"evidence\": \"iM스마트예금 우대조건(spcl_cnd): * 최고우대금리 : 연0.25%p\\n- 가입일(재예치일)로부터 3 개월 이내 아래 1 가지 이상 요건 충족시\\n① 당행 주택청약종합저축 보유\\n② 당행 신용(체크)카드 결제실적 보유(결제금액 출금기준)\",\n  \"reason\": \"증거에 따르면 가입일로부터 3 개월 이내에 주택청약종합저축 또는 체크카드 결제실적 중 하나라도 충족하면 최고우대금리인 연 0.25%p가 적용된다.\"\n}",
+      "error": null
+    },
+    {
+      "claim_id": "p004_c02",
+      "gold_label": "UNSUPPORTED",
+      "error_type": "condition_reversal",
+      "predicted_verdict": "UNSUPPORTED",
+      "schema_valid": true,
+      "latency_seconds": 5.624,
+      "reason": "증거는 1 가지 이상 요건만 충족하면 되는 반면, 주장에서는 두 요건 모두 충족해야 한다고 잘못 서술했다.",
+      "raw_content": "{ \"verdict\": \"UNSUPPORTED\", \"evidence\": \"가입일(재예치일)로부터 3 개월 이내 아래 1 가지 이상 요건 충족시\", \"reason\": \"증거는 1 가지 이상 요건만 충족하면 되는 반면, 주장에서는 두 요건 모두 충족해야 한다고 잘못 서술했다.\" }",
+      "error": null
+    },
+    {
+      "claim_id": "p008_c01",
+      "gold_label": "SUPPORTED",
+      "error_type": null,
+      "predicted_verdict": "SUPPORTED",
+      "schema_valid": true,
+      "latency_seconds": 9.14,
+      "reason": "주어진 증거에서 요구불평잔 500만원 이상일 경우 0.2%의 우대금리가 명시되어 있어 주장은 직접 뒷받침된다.",
+      "raw_content": "{\n  \"verdict\": \"SUPPORTED\",\n  \"evidence\": \"미즈월복리정기예금 우대조건(spcl_cnd): ▶ 최고우대금리 0.2% ① 요구불평잔 : 0.2% -300만원이상 0.1%, 500만원이상 0.2%\",\n  \"reason\": \"주어진 증거에서 요구불평잔 500만원 이상일 경우 0.2%의 우대금리가 명시되어 있어 주장은 직접 뒷받침된다.\"\n}",
+      "error": null
+    },
+    {
+      "claim_id": "p008_c02",
+      "gold_label": "UNSUPPORTED",
+      "error_type": "boundary_condition_error",
+      "predicted_verdict": "SUPPORTED",
+      "schema_valid": true,
+      "latency_seconds": 12.424,
+      "reason": "요구불평잔 300 만 원 이상일 경우 0.2% 의 우대금리가 적용되는 조건이 명시되어 있다.",
+      "raw_content": "{\n  \"verdict\": \"SUPPORTED\",\n  \"evidence\": \"미즈월복리정기예금 우대조건(spcl_cnd): ▶ 최고우대금리 0.2% ① 요구불평잔 : 0.2% -300만원이상 0.1%, 500만원이상 0.2%\",\n  \"reason\": \"요구불평잔 300 만 원 이상일 경우 0.2% 의 우대금리가 적용되는 조건이 명시되어 있다.\"\n}",
+      "error": null
+    },
+    {
+      "claim_id": "p010_c01",
+      "gold_label": "SUPPORTED",
+      "error_type": null,
+      "predicted_verdict": "SUPPORTED",
+      "schema_valid": true,
+      "latency_seconds": 9.606,
+      "reason": "주어진 증거는 최근 1 년간 정기예금 계좌의 신규 또는 해지 이력이 없을 경우 0.4% 의 우대금리를 적용한다고 명시하고 있다.",
+      "raw_content": "{\n  \"verdict\": \"SUPPORTED\",\n  \"evidence\": \"Evidence: 굿스타트예금 우대조건(spcl_cnd): ▶ 최고우대금리 0.5% ① 첫예금거래 : 0.4% -최근1년동안 정기예금 계좌 신규 또는 해지이력이 없는경우\",\n  \"reason\": \"주어진 증거는 최근 1 년간 정기예금 계좌의 신규 또는 해지 이력이 없을 경우 0.4% 의 우대금리를 적용한다고 명시하고 있다.\"\n}",
+      "error": null
+    },
+    {
+      "claim_id": "p010_c02",
+      "gold_label": "UNSUPPORTED",
+      "error_type": "eligibility_error",
+      "predicted_verdict": "UNSUPPORTED",
+      "schema_valid": true,
+      "latency_seconds": 8.036,
+      "reason": "증거는 최근 1 년 내 계좌 이력이 없는 경우에만 0.4% 금리를 부여한다고 명시되어 있어, 이력이 있는 경우에도 해당 금리를 받을 수 있다는 주장은 근거와 충돌한다.",
+      "raw_content": "{\n  \"verdict\": \"UNSUPPORTED\",\n  \"evidence\": \"① 첫예금거래 : 0.4% -최근1년동안 정기예금 계좌 신규 또는 해지이력이 없는경우\",\n  \"reason\": \"증거는 최근 1 년 내 계좌 이력이 없는 경우에만 0.4% 금리를 부여한다고 명시되어 있어, 이력이 있는 경우에도 해당 금리를 받을 수 있다는 주장은 근거와 충돌한다.\"\n}",
+      "error": null
+    },
+    {
+      "claim_id": "p017_c01",
+      "gold_label": "SUPPORTED",
+      "error_type": null,
+      "predicted_verdict": "SUPPORTED",
+      "schema_valid": true,
+      "latency_seconds": 7.161,
+      "reason": "증거에서 마케팅 동의 고객에게 0.10%의 우대조건이 명시되어 있어 주장과 일치한다.",
+      "raw_content": "{\n  \"verdict\": \"SUPPORTED\",\n  \"evidence\": \"내맘 쏙 정기예금 우대조건(spcl_cnd): 1. 마케팅동의고객 0.10%\",\n  \"reason\": \"증거에서 마케팅 동의 고객에게 0.10%의 우대조건이 명시되어 있어 주장과 일치한다.\"\n}",
+      "error": null
+    },
+    {
+      "claim_id": "p017_c02",
+      "gold_label": "INSUFFICIENT",
+      "error_type": "evidence_mismatch",
+      "predicted_verdict": "UNSUPPORTED",
+      "schema_valid": true,
+      "latency_seconds": 9.111,
+      "reason": "증거는 마케팅 동의 고객에게만 적용되는 0.10% 우대조건을 명시하고 있으나, 만기 후 1 개월 초과 시 0.01% 이자율에 대한 정보는 포함되지 않았습니다.",
+      "raw_content": "{ \"verdict\": \"UNSUPPORTED\", \"evidence\": \"내맘 쏙 정기예금 우대조건(spcl_cnd): 1. 마케팅동의고객 0.10%\", \"reason\": \"증거는 마케팅 동의 고객에게만 적용되는 0.10% 우대조건을 명시하고 있으나, 만기 후 1 개월 초과 시 0.01% 이자율에 대한 정보는 포함되지 않았습니다.\" }",
+      "error": null
+    },
+    {
+      "claim_id": "p019_c01",
+      "gold_label": "SUPPORTED",
+      "error_type": null,
+      "predicted_verdict": "SUPPORTED",
+      "schema_valid": true,
+      "latency_seconds": 14.667,
+      "reason": "제공된 증거는 12 개월 만기 시 1.15% 금리가 적용된다는 내용을 명시하고 있다.",
+      "raw_content": "{\n  \"verdict\": \"SUPPORTED\",\n  \"evidence\": \"The든든예금(시즌2) 우대조건(spcl_cnd): ①마케팅동의 및 모바일메시지 수신동의 0.05% ②신규고객 우대(최근 12 개월 신규이력·해지이력 미보유) 0.10% ③이벤트금리(비대면금리) 최대 1.15% (3 개월 0.80% / 6, 9 개월 0.90% / 12 개월 1.15%)\"\n,\n  \"reason\": \"제공된 증거는 12 개월 만기 시 1.15% 금리가 적용된다는 내용을 명시하고 있다.\"\n}",
+      "error": null
+    },
+    {
+      "claim_id": "p019_c02",
+      "gold_label": "UNSUPPORTED",
+      "error_type": "conditional_benefit_generalization",
+      "predicted_verdict": "UNSUPPORTED",
+      "schema_valid": true,
+      "latency_seconds": 16.11,
+      "reason": "주어진 증거는 12 개월 금리가 1.15% 임을 명시하지만, 만기와 금리의 상관관계에 대한 정보는 부족하다.",
+      "raw_content": "{\n  \"verdict\": \"UNSUPPORTED\",\n  \"evidence\": \"The든든예금(시즌2) 우대조건(spcl_cnd): ①마케팅동의 및 모바일메시지 수신동의 0.05% ②신규고객 우대(최근 12 개월 신규이력·해지이력 미보유) 0.10% ③이벤트금리(비대면금리) 최대 1.15% (3 개월 0.80% / 6, 9 개월 0.90% / 12 개월 1.15%)\"\n,\n  \"reason\": \"주어진 증거는 12 개월 금리가 1.15% 임을 명시하지만, 만기와 금리의 상관관계에 대한 정보는 부족하다.\"\n}",
+      "error": null
+    },
+    {
+      "claim_id": "p021_c02",
+      "gold_label": "SUPPORTED",
+      "error_type": null,
+      "predicted_verdict": "SUPPORTED",
+      "schema_valid": true,
+      "latency_seconds": 13.836,
+      "reason": "주어진 증거에서 '최초신규고객' 항목이 명시적으로 '연 0.05%p'의 우대금리를 보장하고 있으므로, 이 사실은 주장을 직접 뒷받침한다.",
+      "raw_content": "{\n  \"verdict\": \"SUPPORTED\",\n  \"evidence\": \"IBK평생한가족통장(실세금리정기예금) 우대조건(spcl_cnd): 최고 연 0.20%p\\n-고객별 우대 : 최고 연 0.05%p\\n 1. 최초신규고객 : 연 0.05%p\\n 2. 재예치고객 : 연 0.05%p\\n 3. 장기거래고객 : 연 0.05%p\\n\\n-주거래우대 : 연 0.15%p\",\n  \"reason\": \"주어진 증거에서 '최초신규고객' 항목이 명시적으로 '연 0.05%p'의 우대금리를 보장하고 있으므로, 이 사실은 주장을 직접 뒷받침한다.\"\n}",
+      "error": null
+    },
+    {
+      "claim_id": "p021_c03",
+      "gold_label": "UNSUPPORTED",
+      "error_type": "conditional_benefit_generalization",
+      "predicted_verdict": "UNSUPPORTED",
+      "schema_valid": true,
+      "latency_seconds": 13.231,
+      "reason": "주요 우대금리 0.20%p는 고객별 및 주거래 조건에 따라 적용되므로 모든 고객에게 무조건 적용되는 것은 아닙니다.",
+      "raw_content": "{ \"verdict\": \"UNSUPPORTED\", \"evidence\": \"IBK평생한가족통장(실세금리정기예금) 우대조건(spcl_cnd): 최고 연 0.20%p\\n-고객별 우대 : 최고 연 0.05%p\\n 1. 최초신규고객 : 연 0.05%p\\n 2. 재예치고객 : 연 0.05%p\\n 3. 장기거래고객 : 연 0.05%p\\n\\n-주거래우대 : 연 0.15%p\", \"reason\": \"주요 우대금리 0.20%p는 고객별 및 주거래 조건에 따라 적용되므로 모든 고객에게 무조건 적용되는 것은 아닙니다.\" }",
+      "error": null
+    },
+    {
+      "claim_id": "p023_c01",
+      "gold_label": "SUPPORTED",
+      "error_type": null,
+      "predicted_verdict": "SUPPORTED",
+      "schema_valid": true,
+      "latency_seconds": 11.439,
+      "reason": "증거에 명시된 '-1월 초과 6개월 이내' 구간에서 '고시금리×30%'가 적용된다는 내용과 주장이 일치합니다.",
+      "raw_content": "{\n  \"verdict\": \"SUPPORTED\",\n  \"evidence\": \"IBK굴리기통장(정기예금) 만기후이자(mtrt_int): 만기일 당시 정기예금 만기후 이자율 적용 -1개월 이내: 만기일 당시 계약기간별 고시금리×50% -1월 초과 6개월 이내: 만기일 당시 계약기간별 고시금리×30% -6개월 초과: 만기일 당시 계약기간별 고시금리×20%\",\n  \"reason\": \"증거에 명시된 '-1월 초과 6개월 이내' 구간에서 '고시금리×30%'가 적용된다는 내용과 주장이 일치합니다.\"\n}",
+      "error": null
+    },
+    {
+      "claim_id": "p023_c02",
+      "gold_label": "UNSUPPORTED",
+      "error_type": "term_error",
+      "predicted_verdict": "UNSUPPORTED",
+      "schema_valid": true,
+      "latency_seconds": 11.436,
+      "reason": "증거에 따르면 만기 후 1 개월 초과 6 개월 이내는 30% 적용이며, 20% 적용은 6 개월 초과인 경우이다.",
+      "raw_content": "{ \"verdict\": \"UNSUPPORTED\", \"evidence\": \"IBK굴리기통장(정기예금) 만기후이자(mtrt_int): 만기일 당시 정기예금 만기후 이자율 적용 -1개월 이내: 만기일 당시 계약기간별 고시금리×50% -1월 초과 6개월 이내: 만기일 당시 계약기간별 고시금리×30% -6개월 초과: 만기일 당시 계약기간별 고시금리×20%\", \"reason\": \"증거에 따르면 만기 후 1 개월 초과 6 개월 이내는 30% 적용이며, 20% 적용은 6 개월 초과인 경우이다.\" }",
+      "error": null
+    },
+    {
+      "claim_id": "p024_c01",
+      "gold_label": "INSUFFICIENT",
+      "error_type": "missing_information",
+      "predicted_verdict": "INSUFFICIENT",
+      "schema_valid": true,
+      "latency_seconds": 5.364,
+      "reason": "주어진 증거는 우대조건 정보가 존재하지 않음을 명시하므로, 자동이체와 우대금리 간의 관계를 판단할 수 없다.",
+      "raw_content": "{ \"verdict\": \"INSUFFICIENT\", \"evidence\": \"KDB 정기예금 우대조건(spcl_cnd): 우대조건 정보 없음\", \"reason\": \"주어진 증거는 우대조건 정보가 존재하지 않음을 명시하므로, 자동이체와 우대금리 간의 관계를 판단할 수 없다.\" }",
+      "error": null
+    },
+    {
+      "claim_id": "p013_c04",
+      "gold_label": "SUPPORTED",
+      "error_type": null,
+      "predicted_verdict": "SUPPORTED",
+      "schema_valid": true,
+      "latency_seconds": 8.856,
+      "reason": "증거는 만기 후 1 개월 초과 3 개월 이내 구간에서 일반정기예금 기본이자율의 25% 가 적용된다고 명시하고 있습니다.",
+      "raw_content": "{\n  \"verdict\": \"SUPPORTED\",\n  \"evidence\": \"J정기예금 (만기지급식) 만기후이자(mtrt_int): - 만기후 1개월 초과 3개월 이내 : (일반)정기예금 기본이자율의 25%\",\n  \"reason\": \"증거는 만기 후 1 개월 초과 3 개월 이내 구간에서 일반정기예금 기본이자율의 25% 가 적용된다고 명시하고 있습니다.\"\n}",
+      "error": null
+    },
+    {
+      "claim_id": "p013_c05",
+      "gold_label": "UNSUPPORTED",
+      "error_type": "term_error",
+      "predicted_verdict": "UNSUPPORTED",
+      "schema_valid": true,
+      "latency_seconds": 11.462,
+      "reason": "주어진 증거에 따르면 만기 후 3 개월 초과 시 적용되는 이자율은 0.1%이며, 25%는 1 개월 초과 3 개월 이내 구간에만 적용됩니다.",
+      "raw_content": "{\n  \"verdict\": \"UNSUPPORTED\",\n  \"evidence\": \"J정기예금 (만기지급식) 만기후이자(mtrt_int): - 만기후 1개월 이내 : (일반)정기예금 기본이자율의 50% - 만기후 1개월 초과 3개월 이내 : (일반)정기예금 기본이자율의 25% - 만기후 3개월 초과 : 0.1%\",\n  \"reason\": \"주어진 증거에 따르면 만기 후 3 개월 초과 시 적용되는 이자율은 0.1%이며, 25%는 1 개월 초과 3 개월 이내 구간에만 적용됩니다.\"\n}",
+      "error": null
+    },
+    {
+      "claim_id": "p038_c01",
+      "gold_label": "UNSUPPORTED",
+      "error_type": "evidence_mismatch",
+      "predicted_verdict": "UNSUPPORTED",
+      "schema_valid": true,
+      "latency_seconds": 7.026,
+      "reason": "주어진 증거에 따르면 기본금리는 3.6%로 명시되어 있어, 2.3%라는 주장은 근거와 충돌합니다.",
+      "raw_content": "{\n  \"verdict\": \"UNSUPPORTED\",\n  \"evidence\": \"토스뱅크 먼저 이자 받는 정기예금 12개월 옵션 — 기본금리(base_rate): 3.6%, 최고금리(max_rate): 3.6%\",\n  \"reason\": \"주어진 증거에 따르면 기본금리는 3.6%로 명시되어 있어, 2.3%라는 주장은 근거와 충돌합니다.\"\n}",
+      "error": null
+    },
+    {
+      "claim_id": "p025_c01",
+      "gold_label": "UNSUPPORTED",
+      "error_type": "fabricated_condition",
+      "predicted_verdict": "UNSUPPORTED",
+      "schema_valid": true,
+      "latency_seconds": 5.575,
+      "reason": "주어진 증거는 우대조건이 존재하지 않음을 명시하고 있어, 특정 우대금리 조건을 뒷받침할 수 없다.",
+      "raw_content": "{\n  \"verdict\": \"UNSUPPORTED\",\n  \"evidence\": \"KB Star 정기예금 우대조건(spcl_cnd): 해당무\",\n  \"reason\": \"주어진 증거는 우대조건이 존재하지 않음을 명시하고 있어, 특정 우대금리 조건을 뒷받침할 수 없다.\"\n}",
+      "error": null
+    },
+    {
+      "claim_id": "p028_c01",
+      "gold_label": "SUPPORTED",
+      "error_type": null,
+      "predicted_verdict": "SUPPORTED",
+      "schema_valid": true,
+      "latency_seconds": 8.582,
+      "reason": "증거에 명시된 '4회전기간부터 0.1%p'라는 조건이 주장과 정확히 일치합니다.",
+      "raw_content": "{\n  \"verdict\": \"SUPPORTED\",\n  \"evidence\": \"NH왈츠회전예금 II 우대조건(spcl_cnd): 1. 급여이체실적(50만원 이상)이 있는 경우 : 0.1%p\\n2. 트리플 회전 우대이율 : 4회전기간부터 0.1%p\",\n  \"reason\": \"증거에 명시된 '4회전기간부터 0.1%p'라는 조건이 주장과 정확히 일치합니다.\"\n}",
+      "error": null
+    },
+    {
+      "claim_id": "p028_c02",
+      "gold_label": "UNSUPPORTED",
+      "error_type": "term_error",
+      "predicted_verdict": "UNSUPPORTED",
+      "schema_valid": true,
+      "latency_seconds": 9.227,
+      "reason": "증거에 따르면 트리플 회전 우대이율은 4회전기간부터 적용되며, 1회전기간부터 적용된다는 주장은 근거와 충돌합니다.",
+      "raw_content": "{\n  \"verdict\": \"UNSUPPORTED\",\n  \"evidence\": \"NH왈츠회전예금 II 우대조건(spcl_cnd): 1. 급여이체실적(50만원 이상)이 있는 경우 : 0.1%p\\n2. 트리플 회전 우대이율 : 4회전기간부터 0.1%p\",\n  \"reason\": \"증거에 따르면 트리플 회전 우대이율은 4회전기간부터 적용되며, 1회전기간부터 적용된다는 주장은 근거와 충돌합니다.\"\n}",
+      "error": null
+    },
+    {
+      "claim_id": "p032_c01",
+      "gold_label": "SUPPORTED",
+      "error_type": null,
+      "predicted_verdict": "SUPPORTED",
+      "schema_valid": true,
+      "latency_seconds": 7.407,
+      "reason": "증거에서 12 개월 옵션의 기본금리가 명시적으로 2.3% 로 표기되어 주장과 일치한다.",
+      "raw_content": "{\n  \"verdict\": \"SUPPORTED\",\n  \"evidence\": \"하나의정기예금 12개월 옵션 — 기본금리(base_rate): 2.3%, 최고금리(max_rate): 3.2%\",\n  \"reason\": \"증거에서 12 개월 옵션의 기본금리가 명시적으로 2.3% 로 표기되어 주장과 일치한다.\"\n}",
+      "error": null
+    },
+    {
+      "claim_id": "p032_c02",
+      "gold_label": "UNSUPPORTED",
+      "error_type": "base_vs_max_rate",
+      "predicted_verdict": "UNSUPPORTED",
+      "schema_valid": true,
+      "latency_seconds": 7.658,
+      "reason": "증거에 따르면 기본금리는 2.3%이며, 3.2%는 최고금리입니다.",
+      "raw_content": "{\n  \"verdict\": \"UNSUPPORTED\",\n  \"evidence\": \"하나의정기예금 12개월 옵션 — 기본금리(base_rate): 2.3%, 최고금리(max_rate): 3.2%\",\n  \"reason\": \"증거에 따르면 기본금리는 2.3%이며, 3.2%는 최고금리입니다.\"\n}",
+      "error": null
+    },
+    {
+      "claim_id": "p037_c01",
+      "gold_label": "SUPPORTED",
+      "error_type": null,
+      "predicted_verdict": "SUPPORTED",
+      "schema_valid": true,
+      "latency_seconds": 7.393,
+      "reason": "증거에서 12 개월 옵션의 기본금리가 명시적으로 3.6%로 기재되어 있으므로 주장은 뒷받침된다.",
+      "raw_content": "{\n  \"verdict\": \"SUPPORTED\",\n  \"evidence\": \"카카오뱅크 정기예금 12개월 옵션 — 기본금리(base_rate): 3.6%, 최고금리(max_rate): 3.6%\",\n  \"reason\": \"증거에서 12 개월 옵션의 기본금리가 명시적으로 3.6%로 기재되어 있으므로 주장은 뒷받침된다.\"\n}",
+      "error": null
+    },
+    {
+      "claim_id": "p037_c02",
+      "gold_label": "UNSUPPORTED",
+      "error_type": "numeric_error",
+      "predicted_verdict": "UNSUPPORTED",
+      "schema_valid": true,
+      "latency_seconds": 6.94,
+      "reason": "증거에 따르면 12 개월 기본금리는 3.6%로 명시되어 있어, 4.1%라는 주장은 근거와 충돌합니다.",
+      "raw_content": "{ \"verdict\": \"UNSUPPORTED\", \"evidence\": \"카카오뱅크 정기예금 12 개월 옵션 — 기본금리(base_rate): 3.6%, 최고금리(max_rate): 3.6%\", \"reason\": \"증거에 따르면 12 개월 기본금리는 3.6%로 명시되어 있어, 4.1%라는 주장은 근거와 충돌합니다.\" }",
+      "error": null
+    },
+    {
+      "claim_id": "p018_c02",
+      "gold_label": "SUPPORTED",
+      "error_type": null,
+      "predicted_verdict": "SUPPORTED",
+      "schema_valid": true,
+      "latency_seconds": 8.121,
+      "reason": "증거에서 만기 후 1 개월 이내는 기본이율의 50%가 적용된다고 명시되어 있어 주장을 뒷받침한다.",
+      "raw_content": "{\n  \"verdict\": \"SUPPORTED\",\n  \"evidence\": \"BNK더조은정기예금 만기후이자(mtrt_int): 만기 후 1 개월 이내: 일반정기예금 기본이율 Ⅹ50%\",\n  \"reason\": \"증거에서 만기 후 1 개월 이내는 기본이율의 50%가 적용된다고 명시되어 있어 주장을 뒷받침한다.\"\n}",
+      "error": null
+    },
+    {
+      "claim_id": "p018_c03",
+      "gold_label": "UNSUPPORTED",
+      "error_type": "boundary_condition_error",
+      "predicted_verdict": "UNSUPPORTED",
+      "schema_valid": true,
+      "latency_seconds": 7.708,
+      "reason": "증거에 따르면 만기 후 1 개월 이내는 50% 적용되며, 20% 적용은 만기 후 1 개월 초과인 경우에만 해당한다.",
+      "raw_content": "{\n  \"verdict\": \"UNSUPPORTED\",\n  \"evidence\": \"BNK더조은정기예금 만기후이자(mtrt_int): 만기 후 1 개월 이내: 일반정기예금 기본이율 Ⅹ50%\",\n  \"reason\": \"증거에 따르면 만기 후 1 개월 이내는 50% 적용되며, 20% 적용은 만기 후 1 개월 초과인 경우에만 해당한다.\"\n}",
+      "error": null
+    },
+    {
+      "claim_id": "p002_c06",
+      "gold_label": "SUPPORTED",
+      "error_type": null,
+      "predicted_verdict": "SUPPORTED",
+      "schema_valid": true,
+      "latency_seconds": 7.773,
+      "reason": "증거에서 만기 후 1 개월 초과 1 년 이내 구간이 약정이율의 30%로 명시되어 주어진 주장과 정확히 일치한다.",
+      "raw_content": "{\n  \"verdict\": \"SUPPORTED\",\n  \"evidence\": \"e-그린세이브예금 만기후이자(mtrt_int): 만기 후 1개월 초과 1년 이내: 약정이율의 30%\",\n  \"reason\": \"증거에서 만기 후 1 개월 초과 1 년 이내 구간이 약정이율의 30%로 명시되어 주어진 주장과 정확히 일치한다.\"\n}",
+      "error": null
+    },
+    {
+      "claim_id": "p002_c07",
+      "gold_label": "UNSUPPORTED",
+      "error_type": "term_error",
+      "predicted_verdict": "UNSUPPORTED",
+      "schema_valid": true,
+      "latency_seconds": 9.751,
+      "reason": "증거에 따르면 만기 후 1 년 초과 시 적용되는 이자율은 약정이율의 10% 로 명시되어 있습니다.",
+      "raw_content": "{\n  \"verdict\": \"UNSUPPORTED\",\n  \"evidence\": \"e-그린세이브예금 만기후이자(mtrt_int): 만기 후 1개월: 약정이율의 50%, 만기 후 1개월 초과 1년 이내: 약정이율의 30%, 만기 후 1년 초과: 약정이율의 10%\",\n  \"reason\": \"증거에 따르면 만기 후 1 년 초과 시 적용되는 이자율은 약정이율의 10% 로 명시되어 있습니다.\"\n}",
+      "error": null
+    },
+    {
+      "claim_id": "p022_c02",
+      "gold_label": "SUPPORTED",
+      "error_type": null,
+      "predicted_verdict": "SUPPORTED",
+      "schema_valid": true,
+      "latency_seconds": 7.825,
+      "reason": "증거에서 24개월 옵션의 기본금리가 명시적으로 3.24%로 기재되어 있으므로 주장은 뒷받침된다.",
+      "raw_content": "{\n  \"verdict\": \"SUPPORTED\",\n  \"evidence\": \"IBK더굴리기통장(실세금리정기예금) 24개월 옵션 — 기본금리(base_rate): 3.24%, 최고금리(max_rate): 3.24%\",\n  \"reason\": \"증거에서 24개월 옵션의 기본금리가 명시적으로 3.24%로 기재되어 있으므로 주장은 뒷받침된다.\"\n}",
+      "error": null
+    },
+    {
+      "claim_id": "p022_c03",
+      "gold_label": "UNSUPPORTED",
+      "error_type": "numeric_error",
+      "predicted_verdict": "UNSUPPORTED",
+      "schema_valid": true,
+      "latency_seconds": 10.212,
+      "reason": "증거에 따르면 24개월 옵션의 기본금리는 3.24%로 명시되어 있으며, 2.8%라고 주장한 내용과 충돌합니다.",
+      "raw_content": "{ \"verdict\": \"UNSUPPORTED\", \"evidence\": \"IBK더굴리기통장(실세금리정기예금) 24개월 옵션 — 기본금리(base_rate): 3.24%, 최고금리(max_rate): 3.24%\", \"reason\": \"증거에 따르면 24개월 옵션의 기본금리는 3.24%로 명시되어 있으며, 2.8%라고 주장한 내용과 충돌합니다.\" }",
+      "error": null
+    },
+    {
+      "claim_id": "p033_c01",
+      "gold_label": "SUPPORTED",
+      "error_type": null,
+      "predicted_verdict": "SUPPORTED",
+      "schema_valid": true,
+      "latency_seconds": 7.245,
+      "reason": "증거는 1 개월 초과 6 개월 이내 구간에서 만기시점 기본금리의 30%가 적용된다고 명시하고 있습니다.",
+      "raw_content": "{\n  \"verdict\": \"SUPPORTED\",\n  \"evidence\": \"코드K 정기예금 만기후이자(mtrt_int): 만기 후 - 1개월 초과~6개월 이내 : 만기시점 기본금리 X 30%\",\n  \"reason\": \"증거는 1 개월 초과 6 개월 이내 구간에서 만기시점 기본금리의 30%가 적용된다고 명시하고 있습니다.\"\n}",
+      "error": null
+    },
+    {
+      "claim_id": "p033_c02",
+      "gold_label": "UNSUPPORTED",
+      "error_type": "boundary_condition_error",
+      "predicted_verdict": "UNSUPPORTED",
+      "schema_valid": true,
+      "latency_seconds": 10.08,
+      "reason": "6 개월 초과 구간은 연 0.20% 로 명시되어 있으며, 30% 적용은 1 개월 초과~6 개월 이내 구간에만 해당한다.",
+      "raw_content": "{\n  \"verdict\": \"UNSUPPORTED\",\n  \"evidence\": \"코드K 정기예금 만기후이자(mtrt_int): 만기 후 - 1개월 이내 : 만기시점 기본금리 X 50% - 1개월 초과~6개월 이내 : 만기시점 기본금리 X 30% - 6개월 초과 : 연 0.20%\",\n  \"reason\": \"6 개월 초과 구간은 연 0.20% 로 명시되어 있으며, 30% 적용은 1 개월 초과~6 개월 이내 구간에만 해당한다.\"\n}",
+      "error": null
+    }
+  ]
+}
