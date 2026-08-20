@@ -26,7 +26,6 @@ from src.verifier.client import PROMPT_NAME, SYSTEM_PROMPT, verify
 from src.verifier.langfuse_client import get_langfuse, get_or_create_prompt
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-CLAIM_DATASET_PATH = REPO_ROOT / "data" / "smoke" / "claim_dataset.json"
 RESULTS_DIR = REPO_ROOT / "results" / "eval"
 
 WARMUP_EVIDENCE = "12개월 정기예금 기본금리는 연 3.0%이다."
@@ -34,7 +33,8 @@ WARMUP_CLAIM = "12개월 정기예금 기본금리는 연 3.0%이다."
 
 
 def load_claims(split: str) -> list[dict]:
-    claims = json.loads(CLAIM_DATASET_PATH.read_text(encoding="utf-8"))
+    claim_dataset_path = REPO_ROOT / "data" / split / "claim_dataset.json"
+    claims = json.loads(claim_dataset_path.read_text(encoding="utf-8"))
     return [c for c in claims if c["dataset_split"] == split]
 
 
@@ -68,7 +68,7 @@ def prediction_to_eval_record(pred: dict) -> EvalRecord:
 def run(model_key: str, split: str) -> dict:
     claims = load_claims(split)
     if not claims:
-        raise ValueError(f"no claims found for split={split!r} in {CLAIM_DATASET_PATH}")
+        raise ValueError(f"no claims found for split={split!r} in data/{split}/claim_dataset.json")
 
     prompt_obj = get_or_create_prompt(PROMPT_NAME, SYSTEM_PROMPT)
     prompt_version = prompt_obj.version if prompt_obj else "unknown"
