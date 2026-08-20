@@ -16,7 +16,7 @@ Kanana-2-3B-instruct(BF16)보다 latency가 더 느리게 나왔다(p50 7.83s vs
 | 1. `enable_thinking` 미적용(thinking 누출) | **기각** | Qwen v2 eval 63건의 `raw_content` 전수 확인 — `<think>` 태그 0건, 전부 `{`로 바로 시작하는 valid JSON |
 | 2. warm-up 시간이 latency에 섞임 | **기각** | `run_eval.py`가 warm-up 콜을 이미 latency 측정에서 제외; steady-state 상태에서도 ~2배 격차 유지 |
 | 3. `--quantization` 미인식 | **기각** | 서버 로그에 `Using MarlinLinearKernel for AutoGPTQLinearMethod`, `quantization=inc` 명시; 가중치 로드 3.73 GiB(INT4 크기 — BF16이었다면 ~8GB) |
-| 4. `--mamba-cache-mode=align` 플래그 누락 | **해당 없음 — 플래그 자체가 존재하지 않음** | `docker exec vllm-server vllm serve --help`로 전수 확인, `--mamba*`/`--ssm*` 계열 CLI 플래그가 이 vLLM 버전(0.27.1, `vllm/vllm-openai:latest`)에 하나도 없음. 진단 지시서의 이 항목은 검증 없이 작성된 것으로 보임(가상의 플래그) |
+| 4. `--mamba-cache-mode=align` 플래그 누락 | **정정: 실존함, 원래 판단이 틀렸음** | 최초 확인 때 `vllm serve --help`(그룹 없이)로만 검색해 놓쳤다 — `vllm serve --help=all`로 다시 확인하니 `--mamba-cache-mode {align,all,none}`(기본값 `none`), `--mamba-backend`, `--use-replayssm`, `--replayssm-buffer-len` 등이 실제로 존재한다(`EngineArgs.add_cli_args()` argparse 직접 introspection으로 재검증). 다만 이 옵션은 **prefix caching 시 recurrent state를 언제 저장할지 정하는 정책**이지 raw decode 속도를 올리는 옵션이 아니고, 우리 워크로드(claim마다 evidence가 달라 공유되는 prefix가 없는 batch=1 단발 요청)에서는 prefix caching 자체가 적용될 상황이 아니라 이 플래그를 켜도 실질적 이득은 없을 것으로 판단된다. 대신 `--use-replayssm`(기본 `mamba_cache_mode=none`이 이미 이 옵션의 전제조건을 만족)는 decode 경로 자체를 건드리는 별개의 최적화라 시도해볼 가치가 있다 — 아래 "나중에 볼 것" 참고 |
 | 5. 두 모델 request payload가 실제로 다름 | **기각** | `src/verifier/client.py` 기준 system prompt·temperature(0)·max_tokens(512) 완전히 동일, 모델명/`chat_template_kwargs`만 차이 |
 | vLLM 버전이 이 아키텍처와 안 맞음(사용자 추가 의문) | **근거 부족 — 오히려 반대** | 로그에 `qwen_gdn_linear_attn.py`, `qwen_triton_warmup.py`(`model_type=qwen3_5_text` 명시) 등 Qwen3.5 GDN 하이브리드 구조 전용 코드가 확인됨 — 미지원 아키텍처의 fallback이 아니라 전용 경로. 이미지도 `latest` 태그라 더 올릴 버전이 없음 |
 | 6. INT4 dequant/GDN 커널 오버헤드가 대역폭 이득을 상쇄 | **가장 유력 — 실측으로 뒷받침됨** | 아래 실측 참고 |
@@ -113,6 +113,33 @@ INT4 GEMM 커널(Marlin)을 겨냥한 두 가지 최적화(`VLLM_MARLIN_USE_ATOM
 GDN 하이브리드 지원이 아직 이 정도 최적화 수준이라는 실측 결과다. 이 값 그대로 받아들이고 모델
 선정 논의로 넘어간다(`results/eval/smoke_eval_review.md`의 FAR/Recall 트레이드오프가 latency보다
 우선순위가 높다는 CLAUDE.md 방침에 따라, 이 latency 격차가 Qwen 선정 자체를 뒤집을 근거는 아님).
+
+## 다음 세션에 시도해볼 실측 후보 (플래그 존재 재검증 완료)
+
+"atomic_add·fp16 다 안 통했다"는 결론은 Marlin GEMM 레벨 최적화 두 가지에 한정된 것이었다. 이후
+`vllm serve --help=all` + `EngineArgs.add_cli_args()` argparse 직접 introspection으로 재검증한
+결과, 다음은 실제로 존재하는 플래그이고 아직 하나도 시도하지 않았다:
+
+- **`--gdn-prefill-backend {flashinfer,triton,cutedsl}`** (기본 auto→현재 로그 기준 triton 선택됨) —
+  GDN prefill 커널 자체를 바꿔보는 가장 표적화된 실험. 우리가 병목으로 지목한 바로 그 레이어를
+  직접 건드림.
+- **`--use-replayssm`** (+ 필요시 `--replayssm-buffer-len`) — decode 시 매 스텝 전체 SSM state를
+  다시 쓰지 않고 최근 입력을 버퍼링해 재사용하는 Mamba2 decode 커널. 전제조건(`mamba_cache_mode`가
+  `none` 또는 `align`, Triton mamba backend)이 **기본값 그대로 이미 충족**돼 있어 추가 설정 없이
+  이 플래그 하나만 켜도 된다. `--mamba-cache-mode`(prefix caching 정책, 우리 워크로드엔 무관— 위
+  가설 4 정정 내용 참고)와는 별개로, decode 경로 자체를 바꾸는 옵션이라 latency에 직접 영향을 줄
+  가능성이 있다.
+- **CUDA graph batch=1 최소 구성**: `--enforce-eager` 제거 + `--max-num-seqs 1` + `--max-model-len 1024`
+  + `-cc.cudagraph_mode=FULL_DECODE_ONLY` + `--cudagraph-capture-sizes 1` (모두 실제 존재 확인됨,
+  `-cc`는 `--compilation-config`의 실제 shorthand — 우리 로그에서도 `-cc.mode=none` 형태로 이미
+  관찰됨). `--max-num-seqs 1`이면 이전에 겪은 Mamba cache block 부족 크래시(64/49 한도 문제)도
+  구조적으로 재발하지 않는다.
+- **`--performance-mode interactivity`** (선택지 `balanced`/`interactivity`/`throughput`, 기본
+  `balanced`) — small batch e2e latency 우선 모드, 우리 batch=1·request당 1 verdict 구조에 부합.
+- **`--optimization-level {O0,O1,O2,O3}`** (기본 `O2`) — CUDA graph 실험이 성공하면 추가로 시도.
+
+우선순위는 `--gdn-prefill-backend` → `--use-replayssm` → CUDA graph 최소 구성 → interactivity →
+optimization-level 순으로 본다(표적화된 정도, 구현 난이도 순).
 
 ## 나중에 볼 것 (지금은 스코프 밖)
 
