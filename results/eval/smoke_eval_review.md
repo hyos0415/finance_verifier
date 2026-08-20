@@ -354,3 +354,26 @@ reject 8건 중 3건(`p002_c04_2`, `p002_c05_2`, `p014_c02_1`)은 Sonnet의 fals
   "이 태스크의 한계"가 아니라 "이 체급에서 감수해야 하는 트레이드오프"로 해석하는 게 맞다.
   로컬 후보 선정(Qwen vs Kanana) 결론 자체는 바뀌지 않지만, #15 최종 정리에 이 상한선 비교를
   "로컬 SLM Verifier의 한계를 정직하게 명시하는 근거"로 인용할 수 있다.
+
+## 모델 선정 확정 — Qwen, v2 프롬프트 고정 (Test 단계까지)
+
+Pilot(64건) 결과와 v3/v4 프롬프트 검증, latency 원인 진단(`results/model_selection/qwen_latency_diagnosis.md`)까지
+마친 뒤 다음과 같이 확정한다.
+
+- **후보: Qwen3.5-4B-int4-AutoRound 단독 채택.** Kanana는 이 시점부터 더 이상 비교 대상에
+  포함하지 않는다(CLAUDE.md Eval 단계 방침 — "선정 후 두 모델 비교는 그만둔다"). 근거는 FAR
+  0.1111 vs 0.2222(CLAUDE.md 1순위 지표), Recall 0.8571 vs 0.7143 — 두 지표 모두 Qwen 우위이고,
+  이 우위가 latency 열세(원인은 GDN 하이브리드 구조의 vLLM 커널 성숙도, 설정 문제 아님 — 위 진단
+  문서 참고)나 Macro F1 열세(0.6656 vs 0.7652, 원인은 INSUFFICIENT 인식 0/4)보다 CLAUDE.md 지표
+  우선순위상 더 중요하다고 판단했다.
+- **알려진 확정 약점**: Qwen은 INSUFFICIENT↔UNSUPPORTED 경계를 프롬프트 엔지니어링(v3, v4 두
+  방식 모두 실패)으로 못 고친다. Test 단계 결과 해석 시 이 약점이 그대로 재현될 것으로 예상하고,
+  #15 최종 리포트에 명시한다.
+- **프롬프트: v2 내용으로 Test 단계까지 고정.** Langfuse `verifier-system-prompt` production
+  라벨(현재 version 6, v2와 동일 내용)을 그대로 유지 — 이후 Test 단계에서도 프롬프트를 추가로
+  튜닝하지 않는다. 프롬프트 반복은 Pilot 단계에서 이미 소진됐다(v1→v2 채택, v3/v4 기각).
+- **latency 열세는 알려진 상한**: Marlin 커널 레벨 최적화(atomic_add, fp16)로는 해소 안 됨을
+  확인했고, 더 깊은 커널 최적화는 이번 프로젝트 스코프 밖이라 그대로 안고 간다.
+
+이슈 #14는 이 결정으로 마지막 체크리스트 항목("Qwen vs Kanana 최종 모델 선정")을 완료 처리하고
+닫는다. 다음은 #15 — Test(unseen) 데이터셋 신규 구축 → 최종 eval → 리포트 작성.
