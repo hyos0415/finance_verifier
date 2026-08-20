@@ -398,10 +398,11 @@ def load_product_evidence(canonical: list[dict], product_id: str, source_field: 
         ]
         return f"{product['product_name']} 전체 기간 옵션:\n" + "\n".join(lines)
     if source_field.startswith("options"):
-        opt_12m = next(o for o in product["options"] if o["save_trm_months"] == 12)
+        option_months = int(source_field.split("_", 1)[1].split("m_", 1)[0])
+        option = next(o for o in product["options"] if o["save_trm_months"] == option_months)
         return (
-            f"{product['product_name']} 12개월 옵션 — 기본금리(base_rate): {opt_12m['base_rate']}%, "
-            f"최고금리(max_rate): {opt_12m['max_rate']}%"
+            f"{product['product_name']} {option_months}개월 옵션 — 기본금리(base_rate): {option['base_rate']}%, "
+            f"최고금리(max_rate): {option['max_rate']}%"
         )
     if source_field == "spcl_cnd":
         spcl_cnd = product["spcl_cnd"] if product["spcl_cnd"] is not None else "우대조건 정보 없음"
