@@ -162,5 +162,222 @@
     "instruction": "두 가지를 한 답변에 모두 포함하되 각각 두 문장으로 나눠 써라. (1) 12개월 정기예금 기본금리는 evidence 그대로 정확히 서술 (3.65%). (2) 두 번째 우대조건(만기일에 6~12개월제 5천만원 이상 가입 '그리고' 펀드 3천만원 이상 보유를 모두 충족해야 보너스이율 0.1%)을, 마치 아무 조건 없이 이 상품에 가입만 하면 보너스이율 0.1%가 항상 적용되는 것처럼 일반화해서 서술.",
     "evidence_text": "e-그린세이브예금 12개월 옵션 — 기본금리(base_rate): 3.65%, 최고금리(max_rate): 3.85%",
     "answer_text": "e-그린세이브예금 12개월형의 기본금리는 3.65%입니다. 이는 우대조건과 무관하게 적용되는 기본 이율이므로 정확히 참고하시면 됩니다. 그리고 이 상품은 별다른 조건 없이 가입만 하시면 보너스이율 0.1%가 항상 적용되어 실질적으로 더 높은 금리 혜택을 받으실 수 있습니다. 따라서 e-그린세이브예금에 가입하시는 모든 고객님께 자동으로 0.1%의 추가 이율이 제공된다고 이해하시면 됩니다."
+  },
+  {
+    "claim_id": "p018_c01",
+    "product_id": "p018",
+    "source_field": "spcl_cnd",
+    "label": "SUPPORTED",
+    "error_type": null,
+    "error_match": [],
+    "reasoning_type": [
+      "mutually_exclusive"
+    ],
+    "insufficient_source": null,
+    "instruction": "우대조건 evidence 중 '금리우대쿠폰을 등록한 경우 0.20%'와 '자동재예치를 통해 가입한 경우 0.05%'는 서로 중복 적용되지 않는다(둘 다 만족해도 두 우대금리를 동시에 받을 수 없다)는 사실을 정확히 한 문장으로 답하라.",
+    "evidence_text": "BNK더조은정기예금 우대조건(spcl_cnd): ①신규시 가입(재예치)금액 20백만원 이상인 경우 0.10%\n②신규시 금리우대쿠폰을 등록한 경우 0.20% \n③경남은행 오픈뱅킹 서비스를 가입한 경우 0.10%\n(만기시까지 해당서비스 유지하는 경우)\n④자동재예치를 통해 가입한 경우 0.05%\n(금리우대쿠폰과 중복적용 불가)\n⑤신규(재예치)시 마케팅동의 및 모바일메시지 수신동의 0.10%",
+    "answer_text": "BNK더조은정기예금은 신규 가입 시 금리우대쿠폰을 등록해 0.20% 우대를 받는 경우와 자동재예치를 통해 가입해 0.05% 우대를 받는 경우가 서로 중복 적용되지 않아, 두 조건을 모두 충족하시더라도 두 우대금리를 동시에 받으실 수는 없습니다."
+  },
+  {
+    "claim_id": "p018_c02",
+    "product_id": "p018",
+    "source_field": "spcl_cnd",
+    "label": "UNSUPPORTED",
+    "error_type": "mutually_exclusive_ignored",
+    "error_match": [
+      "중복",
+      "0.25"
+    ],
+    "reasoning_type": [
+      "mutually_exclusive"
+    ],
+    "insufficient_source": null,
+    "instruction": "우대조건 evidence 중 '금리우대쿠폰을 등록한 경우 0.20%'와 '자동재예치를 통해 가입한 경우 0.05%'는 evidence에 '중복적용 불가'라고 명시돼 있다. 이 사실을 무시하고, 두 조건을 모두 만족하면 0.20%와 0.05%가 중복으로 합산되어 총 0.25%p 우대금리를 받을 수 있다고 한 문장으로 답하라.",
+    "evidence_text": "BNK더조은정기예금 우대조건(spcl_cnd): ①신규시 가입(재예치)금액 20백만원 이상인 경우 0.10%\n②신규시 금리우대쿠폰을 등록한 경우 0.20% \n③경남은행 오픈뱅킹 서비스를 가입한 경우 0.10%\n(만기시까지 해당서비스 유지하는 경우)\n④자동재예치를 통해 가입한 경우 0.05%\n(금리우대쿠폰과 중복적용 불가)\n⑤신규(재예치)시 마케팅동의 및 모바일메시지 수신동의 0.10%",
+    "answer_text": "BNK더조은정기예금은 금리우대쿠폰을 등록하시고 자동재예치를 통해 가입하시는 두 조건을 모두 충족하시면, 0.20%와 0.05%가 중복으로 합산되어 총 0.25%p의 우대금리를 받으실 수 있습니다."
+  },
+  {
+    "claim_id": "p018_c03",
+    "product_id": "p018",
+    "source_field": "spcl_cnd",
+    "label": "SUPPORTED",
+    "error_type": null,
+    "error_match": [],
+    "reasoning_type": [
+      "numeric_threshold"
+    ],
+    "insufficient_source": null,
+    "instruction": "우대조건 evidence 중 신규(재예치) 가입금액이 20백만원 이상인 경우 0.10%p 우대금리가 적용된다는 조건을 evidence의 금액 표기('20백만원') 그대로 정확히 한 문장으로 답하라 — '2천만원' 같은 다른 단위 표기로 바꿔쓰지 말 것.",
+    "evidence_text": "BNK더조은정기예금 우대조건(spcl_cnd): ①신규시 가입(재예치)금액 20백만원 이상인 경우 0.10%\n②신규시 금리우대쿠폰을 등록한 경우 0.20% \n③경남은행 오픈뱅킹 서비스를 가입한 경우 0.10%\n(만기시까지 해당서비스 유지하는 경우)\n④자동재예치를 통해 가입한 경우 0.05%\n(금리우대쿠폰과 중복적용 불가)\n⑤신규(재예치)시 마케팅동의 및 모바일메시지 수신동의 0.10%",
+    "answer_text": "BNK더조은정기예금은 신규 가입 시(재예치 포함) 가입금액이 20백만원 이상인 경우 0.10%p의 우대금리가 적용됩니다."
+  },
+  {
+    "claim_id": "p013_c01",
+    "product_id": "p013",
+    "source_field": "spcl_cnd",
+    "label": "SUPPORTED",
+    "error_type": null,
+    "error_match": [],
+    "reasoning_type": [
+      "exception"
+    ],
+    "insufficient_source": null,
+    "instruction": "우대조건 evidence는 비대면 채널 가입 시 평소 0.3%p가 적용되지만, 단서 조항으로 이벤트 시에는 디지털 채널에 고시된 우대금리를 추가로 적용할 수 있다고 되어 있다. 이 평소 규칙과 예외 단서를 모두 포함해서 두 문장으로 답하라.",
+    "evidence_text": "J정기예금\n(만기지급식) 우대조건(spcl_cnd): - 아래의 우대요건 충족시 최고 0.5%p 추가 우대 \n①비대면 채널 가입시 0.3%제공(신규시제공)  \n(단, 이벤트시 디지털 채널에 고시한 우대금리를 추가 적용할 수 있음)\n②신규일로부터 만기달 제외한 계약기간의 1/2이상 매월 Jbank로그인 시 0.2%제공(만기시제공)",
+    "answer_text": "J정기예금은 비대면 채널을 통해 신규 가입하실 경우 평소에는 0.3%p의 우대금리가 신규 시 제공됩니다. 다만, 이벤트가 진행되는 경우에는 디지털 채널에 별도로 고시된 우대금리를 추가로 적용받으실 수 있으니 가입 전 해당 이벤트 공지를 확인해 보시는 것이 좋습니다."
+  },
+  {
+    "claim_id": "p013_c02",
+    "product_id": "p013",
+    "source_field": "spcl_cnd",
+    "label": "UNSUPPORTED",
+    "error_type": "exception_omission",
+    "error_match": [
+      "항상",
+      "고정"
+    ],
+    "reasoning_type": [
+      "exception"
+    ],
+    "insufficient_source": null,
+    "instruction": "우대조건 evidence는 비대면 채널 가입 우대금리가 평소 0.3%p이되, 이벤트 시에는 디지털 채널 고시 금리를 추가 적용할 수 있다는 예외 단서가 있다. 이 예외 단서는 빼고, 비대면 채널가입 우대금리는 항상 0.3%p로 고정되어 있다고 한 문장으로 답하라.",
+    "evidence_text": "J정기예금\n(만기지급식) 우대조건(spcl_cnd): - 아래의 우대요건 충족시 최고 0.5%p 추가 우대 \n①비대면 채널 가입시 0.3%제공(신규시제공)  \n(단, 이벤트시 디지털 채널에 고시한 우대금리를 추가 적용할 수 있음)\n②신규일로부터 만기달 제외한 계약기간의 1/2이상 매월 Jbank로그인 시 0.2%제공(만기시제공)",
+    "answer_text": "고객님, J정기예금(만기지급식)의 비대면 채널 가입 우대금리는 항상 0.3%p로 고정 적용되며, 신규 가입 시 제공되는 조건이니 참고 부탁드립니다."
+  },
+  {
+    "claim_id": "p013_c03",
+    "product_id": "p013",
+    "source_field": "options_all",
+    "label": "UNSUPPORTED",
+    "error_type": "term_error",
+    "error_match": [
+      "3.85"
+    ],
+    "reasoning_type": [
+      "numeric_threshold"
+    ],
+    "insufficient_source": null,
+    "instruction": "evidence에서 24개월 옵션의 최고금리(max_rate)는 3.8%, 36개월 옵션의 최고금리는 3.85%이다. 이 둘을 바꿔서, 24개월 옵션의 최고금리가 3.85%라고 한 문장으로 답하라.",
+    "evidence_text": "J정기예금\n(만기지급식) 전체 기간 옵션:\n- 1개월: 기본금리(base_rate) 1.4%, 최고금리(max_rate) 2.4%\n- 3개월: 기본금리(base_rate) 1.7%, 최고금리(max_rate) 2.9%\n- 6개월: 기본금리(base_rate) 1.9%, 최고금리(max_rate) 3.3%\n- 12개월: 기본금리(base_rate) 2%, 최고금리(max_rate) 3.8%\n- 24개월: 기본금리(base_rate) 1.85%, 최고금리(max_rate) 3.8%\n- 36개월: 기본금리(base_rate) 1.85%, 최고금리(max_rate) 3.85%",
+    "answer_text": "J정기예금의 만기지급식 기준으로 24개월 옵션의 최고금리는 3.85%입니다."
+  },
+  {
+    "claim_id": "p016_c01",
+    "product_id": "p016",
+    "source_field": "spcl_cnd",
+    "label": "UNSUPPORTED",
+    "error_type": "eligibility_error",
+    "error_match": [
+      "보유하고 있었던",
+      "보유한 고객만",
+      "보유 이력이 있는"
+    ],
+    "reasoning_type": [
+      "temporal_scope"
+    ],
+    "insufficient_source": null,
+    "instruction": "evidence는 '가입일 직전 6개월 동안 당행 원화 정기예금 보유이력이 없는 경우' 0.50%p 이벤트 우대금리가 적용된다고 되어 있다(보유이력이 없어야 자격이 됨). 이 자격 조건을 반대로 뒤집어서, 가입일 직전 6개월 동안 당행 원화 정기예금을 보유하고 있었던 고객만 0.50%p 우대금리를 받을 수 있다고 한 문장으로 답하라.",
+    "evidence_text": "JB 123 정기예금\n (만기일시지급식) 우대조건(spcl_cnd): 자동재예치 우대이율\n1회차 0.1%,\n2회차 0.2%,\n3회차 0.3%\n\n(이벤트우대이율)\n2026.5.28~12.31 까지\n1)가입일직전 6개월 동안 당행 원화 정기예금 보유이력이 없는 경우 0.50%\n2.개인(신용)정보 수집/이용 동의한 경우(단, 상품서비스 안내수단 전체 동의한 경우에 한함) 0.10%",
+    "answer_text": "고객님, JB 123 정기예금(만기일시지급식)의 이벤트 우대금리 0.50%p는 가입일 직전 6개월 동안 저희 은행 원화 정기예금을 보유하고 계셨던 고객님께만 적용되는 조건이니 참고해 주시기 바랍니다."
+  },
+  {
+    "claim_id": "p016_c02",
+    "product_id": "p016",
+    "source_field": "spcl_cnd",
+    "label": "UNSUPPORTED",
+    "error_type": "term_error",
+    "error_match": [
+      "내내",
+      "상시",
+      "연중"
+    ],
+    "reasoning_type": [
+      "temporal_scope"
+    ],
+    "insufficient_source": null,
+    "instruction": "evidence는 이벤트 우대금리 적용 기간이 '2026.5.28~12.31까지'로 한정돼 있다고 되어 있다. 이 기간 한정을 무시하고, 이벤트 우대금리가 연중 상시 적용된다고 한 문장으로 답하라.",
+    "evidence_text": "JB 123 정기예금\n (만기일시지급식) 우대조건(spcl_cnd): 자동재예치 우대이율\n1회차 0.1%,\n2회차 0.2%,\n3회차 0.3%\n\n(이벤트우대이율)\n2026.5.28~12.31 까지\n1)가입일직전 6개월 동안 당행 원화 정기예금 보유이력이 없는 경우 0.50%\n2.개인(신용)정보 수집/이용 동의한 경우(단, 상품서비스 안내수단 전체 동의한 경우에 한함) 0.10%",
+    "answer_text": "JB 123 정기예금은 별도의 기간 제한 없이 연중 상시로 이벤트 우대금리가 적용되며, 가입일 직전 6개월간 당행 원화 정기예금 보유 이력이 없으신 경우 0.50%, 개인(신용)정보 수집·이용에 전체 동의하신 경우 0.10%의 우대금리를 추가로 받으실 수 있습니다."
+  },
+  {
+    "claim_id": "p016_c03",
+    "product_id": "p016",
+    "source_field": "options_12m_base_rate",
+    "label": "SUPPORTED",
+    "error_type": null,
+    "error_match": [],
+    "reasoning_type": [
+      "numeric_threshold"
+    ],
+    "insufficient_source": null,
+    "instruction": "12개월 정기예금의 기본금리를 evidence 그대로 정확히 한 문장으로 답하라 (3.21%).",
+    "evidence_text": "JB 123 정기예금\n (만기일시지급식) 12개월 옵션 — 기본금리(base_rate): 3.21%, 최고금리(max_rate): 3.81%",
+    "answer_text": "JB 123 정기예금(만기일시지급식) 12개월 옵션의 기본금리는 3.21%입니다."
+  },
+  {
+    "claim_id": "p014_c01",
+    "product_id": "p014",
+    "source_field": "spcl_cnd",
+    "label": "SUPPORTED",
+    "error_type": null,
+    "error_match": [],
+    "reasoning_type": [
+      "any_of"
+    ],
+    "insufficient_source": null,
+    "instruction": "우대조건 evidence의 첫 번째 항목(김만덕나눔적금 보유 '또는' 그 적금 만기 해지고객 — 둘 중 하나만 충족해도 0.2%p 우대)을 정확히 한 문장으로 설명하라. '또는' 관계를 그대로 유지할 것.",
+    "evidence_text": "스마일드림 \n정기예금\n(개인/선이자\n지급식) 우대조건(spcl_cnd): -아래의 우대요건 충족시 최고0.3% 추가우대(신규시제공)\n①김만덕나눔적금 보유 또는 김만적 나눔적금 만기 해지고객 0.2%우대(가입시제공)\n②예금가입시 탐나는전 체크카드 보유고객 0.1%우대(가입시제공)\n(단, 이벤트시 영업점,디지털채널에 고시한 우대금리를 추가 적용할 수 있음)",
+    "answer_text": "스마일드림 정기예금(개인/선이자지급식)의 우대조건 중 첫 번째 항목은, 김만덕나눔적금을 현재 보유하고 있거나 또는 해당 적금을 만기까지 유지하고 해지한 고객이라면, 둘 중 하나만 충족해도 가입 시 0.2%p의 우대금리를 받으실 수 있다는 내용입니다."
+  },
+  {
+    "claim_id": "p014_c02",
+    "product_id": "p014",
+    "source_field": "spcl_cnd",
+    "label": "UNSUPPORTED",
+    "error_type": "conditional_benefit_generalization",
+    "error_match": [
+      "항상",
+      "무조건",
+      "누구나"
+    ],
+    "reasoning_type": [
+      "all_of"
+    ],
+    "insufficient_source": null,
+    "instruction": "우대조건 evidence는 특정 요건(적금 보유/체크카드 보유 등)을 충족해야 최고 0.3% 추가우대를 받을 수 있다고 되어 있다. 이 요건들을 무시하고, 이 상품에 가입하는 고객은 누구나 무조건 0.3%p 추가우대금리를 받는다고 한 문장으로 답하라.",
+    "evidence_text": "스마일드림 \n정기예금\n(개인/선이자\n지급식) 우대조건(spcl_cnd): -아래의 우대요건 충족시 최고0.3% 추가우대(신규시제공)\n①김만덕나눔적금 보유 또는 김만적 나눔적금 만기 해지고객 0.2%우대(가입시제공)\n②예금가입시 탐나는전 체크카드 보유고객 0.1%우대(가입시제공)\n(단, 이벤트시 영업점,디지털채널에 고시한 우대금리를 추가 적용할 수 있음)",
+    "answer_text": "스마일드림 정기예금(개인/선이자지급식)은 별도의 조건 확인 없이 가입만 하시면 누구나 무조건 0.3%p의 추가우대금리를 받으실 수 있습니다."
+  },
+  {
+    "claim_id": "p030_c01",
+    "product_id": "p030",
+    "source_field": "spcl_cnd",
+    "label": "INSUFFICIENT",
+    "error_type": "missing_information",
+    "error_match": [
+      "인터넷뱅킹",
+      "모바일"
+    ],
+    "reasoning_type": [],
+    "insufficient_source": "natural_missing",
+    "instruction": "이 상품은 우대조건(spcl_cnd) 정보 자체가 없다(evidence: 우대조건 정보 없음). 그런데도 '인터넷뱅킹으로 가입하면 우대금리를 추가로 받을 수 있다'고 한 문장으로 답하라 — 실제로는 해당 정보가 없다는 사실은 언급하지 말고, 질문에 그냥 답하는 것처럼 써라.",
+    "evidence_text": "NH올원e예금 우대조건(spcl_cnd): 우대조건 정보 없음",
+    "answer_text": "네, NH올원e예금은 인터넷뱅킹으로 가입하시면 우대금리를 추가로 받으실 수 있습니다."
+  },
+  {
+    "claim_id": "p035_c01",
+    "product_id": "p035",
+    "source_field": "spcl_cnd",
+    "label": "INSUFFICIENT",
+    "error_type": "missing_information",
+    "error_match": [
+      "급여",
+      "카드"
+    ],
+    "reasoning_type": [],
+    "insufficient_source": "natural_missing",
+    "instruction": "이 상품은 우대조건(spcl_cnd) 정보 자체가 없다(evidence: 우대조건 정보 없음). 그런데도 '급여 이체 실적과 카드 사용 실적이 있으면 우대금리를 추가로 받을 수 있다'고 한 문장으로 답하라 — 실제로는 해당 정보가 없다는 사실은 언급하지 말고, 질문에 그냥 답하는 것처럼 써라.",
+    "evidence_text": "헤이(Hey)정기예금 우대조건(spcl_cnd): 우대조건 정보 없음",
+    "answer_text": "헤이(Hey)정기예금은 급여 이체 실적과 카드 사용 실적이 있으실 경우 우대금리를 추가로 받으실 수 있습니다."
   }
 ]

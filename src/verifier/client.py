@@ -23,11 +23,13 @@ from typing import Optional
 import requests
 from pydantic import ValidationError
 
+from src.verifier.langfuse_client import get_langfuse, get_or_create_prompt
 from src.verifier.schemas import VERIFIER_JSON_SCHEMA, VerifierOutput
 
 ENDPOINT = "http://localhost:8000/v1/chat/completions"
 TEMPERATURE = 0
-MAX_TOKENS = 300
+MAX_TOKENS = 512
+PROMPT_NAME = "verifier-system-prompt"
 
 MODEL_CONFIGS = {
     "qwen": {
@@ -47,7 +49,9 @@ SYSTEM_PROMPT = (
     "- SUPPORTED: evidence가 claim을 직접 뒷받침한다\n"
     "- UNSUPPORTED: evidence가 claim과 명시적으로 충돌한다\n"
     "- INSUFFICIENT: evidence에 판단할 정보 자체가 없다 (충돌이 아니라 정보 부재)\n\n"
-    "evidence에 없는 외부 지식을 사용하지 말고, 주어진 evidence만으로 판단하라."
+    "evidence에 없는 외부 지식을 사용하지 말고, 주어진 evidence만으로 판단하라.\n\n"
+    "reason은 반드시 한 문장, 100자 이내로 간결하게 작성하라. evidence 원문을 다시 인용하거나 "
+    "같은 근거를 여러 번 반복하지 마라."
 )
 
 
@@ -59,14 +63,32 @@ class VerifierResult:
     raw_content: str
     error: Optional[str]
     latency_seconds: float
+    prompt_version: Optional[int]
 
 
-def verify(evidence: str, claim: str, model_key: str) -> VerifierResult:
+def _flatten_metadata(metadata: Optional[dict]) -> dict:
+    """Langfuse v4 metadata is dict[str, str] (200-char values) -- lists/None
+    etc. get silently coerced/dropped otherwise, so flatten explicitly."""
+    if not metadata:
+        return {}
+    flat = {}
+    for key, value in metadata.items():
+        if value is None:
+            continue
+        text = ",".join(value) if isinstance(value, (list, tuple)) else str(value)
+        flat[key] = text[:200]
+    return flat
+
+
+def verify(evidence: str, claim: str, model_key: str, metadata: Optional[dict] = None) -> VerifierResult:
     config = MODEL_CONFIGS[model_key]
+    prompt_obj = get_or_create_prompt(PROMPT_NAME, SYSTEM_PROMPT)
+    system_text = prompt_obj.prompt if prompt_obj else SYSTEM_PROMPT
+
     payload = {
         "model": config["model"],
         "messages": [
-            {"role": "system", "content": SYSTEM_PROMPT},
+            {"role": "system", "content": system_text},
             {"role": "user", "content": f"Evidence: {evidence}\n\nClaim: {claim}"},
         ],
         "temperature": TEMPERATURE,
@@ -76,15 +98,28 @@ def verify(evidence: str, claim: str, model_key: str) -> VerifierResult:
     if config["chat_template_kwargs"]:
         payload["chat_template_kwargs"] = config["chat_template_kwargs"]
 
-    t0 = time.perf_counter()
-    response = requests.post(ENDPOINT, json=payload, timeout=60)
-    response.raise_for_status()
-    latency = time.perf_counter() - t0
+    langfuse = get_langfuse()
+    with langfuse.start_as_current_observation(
+        as_type="generation",
+        name="verifier-call",
+        model=config["model"],
+        input={"evidence": evidence, "claim": claim},
+        metadata={"model_key": model_key, **_flatten_metadata(metadata)},
+        prompt=prompt_obj,
+    ) as generation:
+        t0 = time.perf_counter()
+        response = requests.post(ENDPOINT, json=payload, timeout=60)
+        response.raise_for_status()
+        latency = time.perf_counter() - t0
 
-    raw_content = response.json()["choices"][0]["message"]["content"]
+        raw_content = response.json()["choices"][0]["message"]["content"]
+        generation.update(output=raw_content)
 
-    try:
-        output = VerifierOutput.model_validate(json.loads(raw_content))
-        return VerifierResult(model_key, True, output, raw_content, None, latency)
-    except (json.JSONDecodeError, ValidationError) as e:
-        return VerifierResult(model_key, False, None, raw_content, str(e), latency)
+        prompt_version = prompt_obj.version if prompt_obj else None
+        try:
+            output = VerifierOutput.model_validate(json.loads(raw_content))
+            generation.update(metadata={"schema_valid": "true", "verdict": output.verdict.value})
+            return VerifierResult(model_key, True, output, raw_content, None, latency, prompt_version)
+        except (json.JSONDecodeError, ValidationError) as e:
+            generation.update(metadata={"schema_valid": "false"}, level="ERROR", status_message=str(e))
+            return VerifierResult(model_key, False, None, raw_content, str(e), latency, prompt_version)

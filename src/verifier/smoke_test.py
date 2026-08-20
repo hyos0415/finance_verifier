@@ -16,6 +16,7 @@ import sys
 from pathlib import Path
 
 from src.verifier.client import verify
+from src.verifier.langfuse_client import get_langfuse
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 CLAIM_DATASET_PATH = REPO_ROOT / "data" / "smoke" / "claim_dataset.json"
@@ -43,7 +44,15 @@ def main() -> None:
 
     results = []
     for claim in claims:
-        result = verify(claim["evidence_text"], claim["claim_text"], model_key)
+        trace_metadata = {
+            "product_id": claim["product_id"],
+            "source_field": claim["source_field"],
+            "gold_label": claim["label"],
+            "error_type": claim["error_type"],
+            "reasoning_type": claim["reasoning_type"],
+            "dataset_split": claim["dataset_split"],
+        }
+        result = verify(claim["evidence_text"], claim["claim_text"], model_key, metadata=trace_metadata)
         gold = claim["label"]
         predicted = result.output.verdict.value if result.schema_valid else None
         results.append({
@@ -66,6 +75,9 @@ def main() -> None:
     existing[model_key] = results
     OUT_PATH.write_text(json.dumps(existing, ensure_ascii=False, indent=2), encoding="utf-8")
     print(f"[smoke] {len(results)} results -> {OUT_PATH.relative_to(REPO_ROOT)}")
+
+    get_langfuse().flush()
+    print("[smoke] flushed traces to Langfuse")
 
 
 if __name__ == "__main__":

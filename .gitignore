@@ -1,6 +1,9 @@
 # Secrets
 .env
 
+# Personal notes (not project deliverables)
+notes/
+
 # Python
 __pycache__/
 *.py[cod]
