@@ -305,16 +305,42 @@ CLAUDE.md 방침상 두 후보는 동일 프롬프트를 써야 공정 비교가
 
 ### 헤드라인 비교
 
-| 지표 | Qwen (로컬) | Kanana (로컬) | Claude Haiku 4.5 | Claude Sonnet 5 |
-|---|---|---|---|---|
-| False Accept Rate | 0.1111 | 0.2222 | **0.0** | 0.0556 |
-| UNSUPPORTED Recall | 0.8571 | 0.7143 | **0.8571** | 0.7857 |
-| Macro F1 | 0.6656 | 0.7652 | 0.7552 | **0.8228** |
-| Schema Valid Rate | 1.0 | 1.0 | 1.0 | 1.0 |
-| Latency p50/p95 | 7.83s/17.05s | 3.84s/7.73s | **1.77s/2.49s** | 3.07s/4.61s |
+| 지표 | Qwen (로컬) | Kanana (로컬) | Claude Haiku 4.5 | Claude Sonnet 5 | Nemotron Ultra 550B |
+|---|---|---|---|---|---|
+| False Accept Rate | 0.1111 | 0.2222 | **0.0** | 0.0556 | **0.0** |
+| UNSUPPORTED Recall | 0.8571 | 0.7143 | **0.8571** | 0.7857 | 0.7857 |
+| Macro F1 | 0.6656 | 0.7652 | 0.7552 | **0.8228** | 0.5665 |
+| Schema Valid Rate | 1.0 | 1.0 | 1.0 | 1.0 | 1.0 |
+| Latency p50/p95 | 7.83s/17.05s | 3.84s/7.73s | **1.77s/2.49s** | 3.07s/4.61s | 2.15s/13.01s |
 
-(latency는 로컬 vLLM batch=1 GPU 서빙 vs hosted Claude API 왕복 시간이라 직접 비교 대상은 아니다 —
-참고 수치로만 본다.)
+(latency는 로컬 vLLM batch=1 GPU 서빙 vs hosted API 왕복 시간이라 직접 비교 대상은 아니다 — 참고
+수치로만 본다. Nemotron은 NVIDIA build.nvidia.com의 OpenAI 호환 NIM 엔드포인트로 호출했고, Qwen과
+동일하게 `enable_thinking: false`를 명시해 thinking 누출 없이 확인함, `src/eval/run_eval_nvidia.py`.)
+
+### Nemotron Ultra(550B)도 INSUFFICIENT 4건을 전부 놓친다 — 체급과 무관한 실패 패턴
+
+Nemotron은 FAR 0.0으로 최상위권인데 Macro F1은 지금까지 비교한 모델 중 가장 낮다(0.5665). 원인을
+까보면 클래스별 정답률이 뚜렷하게 갈린다:
+
+| 골드 라벨 | 정답 비율 |
+|---|---|
+| SUPPORTED | 43/46 |
+| UNSUPPORTED | 11/14 |
+| **INSUFFICIENT** | **0/4** |
+
+**INSUFFICIENT 4건(`p022_c01_2`/`p030_c01`/`p035_c01_1`/`p035_c01_2`) 전부 UNSUPPORTED로 오판했다** —
+Qwen이 v2/v3/v4 전 버전에서 겪은 것과 정확히 같은 실패 패턴이, 파라미터 규모가 훨씬 큰(550B) 모델에서도
+그대로 재현됐다. 반대 방향 혼동(`UNSUPPORTED`를 `INSUFFICIENT`로 오판)도 3건 있는데(`p002_c04_3`,
+`p002_c05_3`, `p002_c05_4`) 이 중 `p002_c04_3`은 이미 두 로컬 후보도 놓쳤던 "진짜 어려운 케이스"로
+표시해둔 claim이다.
+
+**이건 이 프로젝트의 결론에 실질적인 무게를 더한다.** Qwen에서 v3/v4 프롬프트 엔지니어링이 둘 다
+실패했을 때 "Qwen 고유의 약점"으로 결론지었는데, 550B급 모델도 동일한 경계에서 동일하게 틀린다는
+건 — 이게 모델 체급의 문제가 아니라 **v2 프롬프트가 정의한 SUPPORTED/UNSUPPORTED/INSUFFICIENT
+경계 자체, 혹은 "자연 결측"(evidence에 항목 자체가 없음) 유형의 claim이 갖는 근본적인 모호성**에
+더 가깝다는 뜻이다. 즉 "정보 부재"와 "명시적 충돌"을 프롬프트 문구만으로 구분시키는 접근 자체가
+모델 체급과 무관하게 어려운 문제일 수 있다 — Test 단계나 #15 최종 리포트에서 이 항목을 "확정된
+모델 약점"이 아니라 "이 태스크·이 프롬프트 설계의 알려진 한계"로 프레이밍하는 게 더 정확해 보인다.
 
 ### 왜 더 작은 모델(Haiku)이 더 큰 모델(Sonnet)보다 FAR·Recall이 좋을까 — "판정을 더 보수적으로 내린다"
 
