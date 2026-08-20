@@ -191,9 +191,9 @@ finance_verifier/
 
 ## 다음 작업 (핸드오프 문서 기준)
 
-1단계(환경 구성 + raw snapshot)는 완료. #14(Eval Harness + Pilot 모델 선정)까지 완료 — **Qwen3.5-4B-int4-AutoRound를 유일한 Verifier 후보로 확정**했고(Kanana는 비교 대상에서 제외), 프롬프트는 v2로 Test 단계까지 고정했다(`results/eval/smoke_eval_review.md`의 "모델 선정 확정" 절 참고). 우선순위: **#23 Test 데이터셋 구축(unseen) → #15 최종 결과 정리**.
+1단계(환경 구성 + raw snapshot)는 완료. #14(Eval Harness + Pilot 모델 선정)·#23(Test 데이터셋 구축 + 최종 eval)까지 완료 — **Qwen3.5-4B-int4-AutoRound를 유일한 Verifier 후보로 확정**했고(Kanana는 비교 대상에서 제외), 프롬프트는 v2로 Test 단계까지 고정했다(`results/eval/smoke_eval_review.md`의 "모델 선정 확정" 절, `results/eval/test_eval_review.md` 참고). Test(53건, unseen)에서 확정 약점이 두 가지로 정리됨: ①INSUFFICIENT↔UNSUPPORTED 경계 혼동, ②`condition_omission`(AND 복합조건 일부 인용 시 누락 못 잡음). 우선순위: **#25 Qwen Latency 개선 실험 → #15 최종 결과 정리**.
 
-각 작업 블록은 GitHub 이슈로 트래킹한다: [#1](../../issues/1)(완료, repo/secret) · [#2](../../issues/2)(완료, 모델 로드 체크) · [#3](../../issues/3)(완료, WSL2/vLLM) · [#4](../../issues/4)(완료, API 첫 호출) · [#5](../../issues/5)(완료, 데이터 프로파일링을 Eval Design 관점으로 재검토) · [#6](../../issues/6)(완료, canonical schema / Claim metadata) · [#7](../../issues/7)(완료, 모델 serving smoke — 심화) · [#12](../../issues/12)(완료, Claim Decomposer 구현) · [#13](../../issues/13)(완료, Verifier Client 구현) · [#14](../../issues/14)(완료, Eval Harness 구현 + Pilot 모델 선정 — Qwen 확정) · [#23](../../issues/23)(Test 데이터셋 구축 — unseen, Claude+Codex 공동 생성) · [#15](../../issues/15)(최종 결과 정리).
+각 작업 블록은 GitHub 이슈로 트래킹한다: [#1](../../issues/1)(완료, repo/secret) · [#2](../../issues/2)(완료, 모델 로드 체크) · [#3](../../issues/3)(완료, WSL2/vLLM) · [#4](../../issues/4)(완료, API 첫 호출) · [#5](../../issues/5)(완료, 데이터 프로파일링을 Eval Design 관점으로 재검토) · [#6](../../issues/6)(완료, canonical schema / Claim metadata) · [#7](../../issues/7)(완료, 모델 serving smoke — 심화) · [#12](../../issues/12)(완료, Claim Decomposer 구현) · [#13](../../issues/13)(완료, Verifier Client 구현) · [#14](../../issues/14)(완료, Eval Harness 구현 + Pilot 모델 선정 — Qwen 확정) · [#23](../../issues/23)(완료, Test 데이터셋 구축 — unseen, Claude+Codex 공동 생성, 확정 약점 2종 발견) · [#25](../../issues/25)(Qwen Latency 개선 실험 — CUDA graph/GDN backend/performance-mode) · [#15](../../issues/15)(최종 결과 정리).
 
 ### Langfuse
 
