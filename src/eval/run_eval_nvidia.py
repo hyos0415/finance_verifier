@@ -30,6 +30,7 @@ RESULTS_DIR = REPO_ROOT / "results" / "eval"
 BASE_URL = "https://integrate.api.nvidia.com/v1"
 MODEL_NAMES = {
     "nemotron": "nvidia/nemotron-3-ultra-550b-a55b",
+    "gemma": "google/gemma-4-31b-it",
 }
 
 WARMUP_EVIDENCE = "12개월 정기예금 기본금리는 연 3.0%이다."

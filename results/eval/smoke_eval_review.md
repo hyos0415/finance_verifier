@@ -305,17 +305,19 @@ CLAUDE.md 방침상 두 후보는 동일 프롬프트를 써야 공정 비교가
 
 ### 헤드라인 비교
 
-| 지표 | Qwen (로컬) | Kanana (로컬) | Claude Haiku 4.5 | Claude Sonnet 5 | Nemotron Ultra 550B |
-|---|---|---|---|---|---|
-| False Accept Rate | 0.1111 | 0.2222 | **0.0** | 0.0556 | **0.0** |
-| UNSUPPORTED Recall | 0.8571 | 0.7143 | **0.8571** | 0.7857 | 0.7857 |
-| Macro F1 | 0.6656 | 0.7652 | 0.7552 | **0.8228** | 0.5665 |
-| Schema Valid Rate | 1.0 | 1.0 | 1.0 | 1.0 | 1.0 |
-| Latency p50/p95 | 7.83s/17.05s | 3.84s/7.73s | **1.77s/2.49s** | 3.07s/4.61s | 2.15s/13.01s |
+| 지표 | Qwen (로컬) | Kanana (로컬) | Claude Haiku 4.5 | Claude Sonnet 5 | Nemotron Ultra 550B | Gemma-4-31B |
+|---|---|---|---|---|---|---|
+| False Accept Rate | 0.1111 | 0.2222 | **0.0** | 0.0556 | **0.0** | 0.0556 |
+| UNSUPPORTED Recall | 0.8571 | 0.7143 | **0.8571** | 0.7857 | 0.7857 | 0.7143 |
+| Macro F1 | 0.6656 | 0.7652 | 0.7552 | **0.8228** | 0.5665 | 0.6233 |
+| Schema Valid Rate | 1.0 | 1.0 | 1.0 | 1.0 | 1.0 | 1.0 |
+| Latency p50/p95 | 7.83s/17.05s | 3.84s/7.73s | **1.77s/2.49s** | 3.07s/4.61s | 2.15s/13.01s | 4.23s/38.81s |
 
 (latency는 로컬 vLLM batch=1 GPU 서빙 vs hosted API 왕복 시간이라 직접 비교 대상은 아니다 — 참고
-수치로만 본다. Nemotron은 NVIDIA build.nvidia.com의 OpenAI 호환 NIM 엔드포인트로 호출했고, Qwen과
-동일하게 `enable_thinking: false`를 명시해 thinking 누출 없이 확인함, `src/eval/run_eval_nvidia.py`.)
+수치로만 본다. Nemotron·Gemma는 NVIDIA build.nvidia.com의 OpenAI 호환 NIM 엔드포인트로 호출했고,
+Qwen과 동일하게 `enable_thinking: false`를 명시해 thinking 누출 없이 확인함(`src/eval/run_eval_nvidia.py`).
+Gemma는 요청별 latency 편차가 매우 컸다(p95 38.81s — 일부 요청이 30초 이상 걸림, 반면 p50은 4.23s로
+빠름); NVIDIA 호스팅 인프라 쪽 변동성으로 보이고 모델 자체의 특성인지는 확인하지 않았다.)
 
 ### Nemotron Ultra(550B)도 INSUFFICIENT 4건을 전부 놓친다 — 체급과 무관한 실패 패턴
 
@@ -341,6 +343,16 @@ Qwen이 v2/v3/v4 전 버전에서 겪은 것과 정확히 같은 실패 패턴�
 더 가깝다는 뜻이다. 즉 "정보 부재"와 "명시적 충돌"을 프롬프트 문구만으로 구분시키는 접근 자체가
 모델 체급과 무관하게 어려운 문제일 수 있다 — Test 단계나 #15 최종 리포트에서 이 항목을 "확정된
 모델 약점"이 아니라 "이 태스크·이 프롬프트 설계의 알려진 한계"로 프레이밍하는 게 더 정확해 보인다.
+
+### Gemma-4-31B — INSUFFICIENT 1/4로 조금 낫지만, 여전히 같은 패턴
+
+Gemma도 같은 4건 기준 `p030_c01`만 정확히 INSUFFICIENT로 잡고 나머지 3건(`p022_c01_2`,
+`p035_c01_1`, `p035_c01_2`)은 UNSUPPORTED로 오판했다(1/4). Qwen(0/4)·Nemotron(0/4)보다는 낫지만
+여전히 다수 오답이라, 지금까지 로컬 2개 + 참고용 4개(Haiku/Sonnet/Nemotron/Gemma) 총 6개 모델 중
+**이 4건을 전부 맞힌 건 Haiku와 Kanana뿐**이다 — 체급이나 제공사와 무관하게 갈리는 걸 보면, 이
+경계가 얼마나 프롬프트/데이터 설계에 민감한지를 보여주는 또 하나의 근거다. false accept는
+`p003_c02_4`(condition_reversal) 1건으로, 이 claim도 여러 모델이 공통으로 놓치는 케이스임이 계속
+재확인되고 있다.
 
 ### 왜 더 작은 모델(Haiku)이 더 큰 모델(Sonnet)보다 FAR·Recall이 좋을까 — "판정을 더 보수적으로 내린다"
 
