@@ -28,15 +28,20 @@ def get_client() -> Anthropic:
     return _client
 
 
-def call_json_schema(system: str, user: str, schema: dict, max_tokens: int = 1024) -> dict:
+def call_json_schema(
+    system: str, user: str, schema: dict, max_tokens: int = 1024, model: str = MODEL, temperature: float | None = None
+) -> dict:
     """Call Claude with a JSON-schema-constrained response, return the parsed dict."""
     client = get_client()
-    response = client.messages.create(
-        model=MODEL,
+    kwargs = dict(
+        model=model,
         max_tokens=max_tokens,
         system=system,
         messages=[{"role": "user", "content": user}],
         output_config={"format": {"type": "json_schema", "schema": schema}},
     )
+    if temperature is not None:
+        kwargs["temperature"] = temperature
+    response = client.messages.create(**kwargs)
     text = next(b.text for b in response.content if b.type == "text")
     return json.loads(text)

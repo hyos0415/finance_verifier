@@ -213,15 +213,144 @@ INSUFFICIENT는 evidence에 claim이 다루는 항목이 전혀 언급되지 않
 예시를 빼고(과적합 방지) v2 대비 길이를 최소한으로 늘리는 게 핵심. **아직 실행 전** — 다음 세션에서
 검증 예정.
 
-## 다음 단계로 넘길 것
+## v4 프롬프트 — INSUFFICIENT 회피 억제 규칙만 단독 추가 (기각)
 
-1. **v4 프롬프트 검증** (다음 세션) — 위 설계안을 Langfuse에 push하고 64건 전체로 Kanana/Qwen 재실행.
-   v2 대비 FAR/Recall이 나빠지지 않으면서 INSUFFICIENT 4건을 유지하는지가 채택 기준. 안 되면 프롬프트
-   엔지니어링은 그만 시도하고 "현재 두 모델의 알려진 공유 약점"으로만 문서화.
-2. **`p002_c04_3`(조건 누락)은 두 모델 다 놓친 진짜 어려운 케이스** — Dev 단계에 이런 "부분 인용 +
+v3에서 문제였던 "절차 규칙 + worked example"을 걷어내고, v2에 짧고 강한 부정 규칙 한 문단만 추가한
+버전(Langfuse version 5)으로 64건 전체(Qwen/Kanana)를 재검증했다.
+
+```
+INSUFFICIENT는 evidence에 claim이 다루는 항목이 전혀 언급되지 않았을 때만 써라 — 애매하거나
+확신이 안 선다는 이유로 INSUFFICIENT를 고르지 마라. evidence에 관련 내용이 하나라도 있으면
+그 내용과 claim을 직접 비교해 SUPPORTED 또는 UNSUPPORTED 중 하나로만 판정하라.
+```
+
+| 지표 | Kanana v2 | Kanana v4 | Qwen v2 | Qwen v4 |
+|---|---|---|---|---|
+| False Accept Rate | 0.2222 | 0.2222 | 0.1111 | 0.1111 |
+| UNSUPPORTED Recall | 0.7143 | 0.7143 | 0.8571 | 0.8571 |
+| Macro F1 | 0.7652 | **0.7992** | 0.6656 | **0.5464** |
+| Schema Valid Rate | 1.0 | 1.0 | 1.0 | 1.0 |
+| Latency p50/p95 | 3.84s/7.73s | 4.01s/7.41s | 7.83s/17.05s | 7.88s/18.05s |
+
+### INSUFFICIENT 4건 — Kanana는 원래도 문제없었고, Qwen은 오히려 더 나빠졌다
+
+자연 결측 INSUFFICIENT 4건(`p022_c01_2`/`p030_c01`/`p035_c01_1`/`p035_c01_2`) 기준:
+
+- **Kanana**: v2에서 이미 4/4 정확(앞서 짚었던 "Kanana는 INSUFFICIENT 처리를 잘한다"는 패턴 그대로) —
+  v4에서도 4/4 유지. v4가 이 문제를 "고쳤다"고 볼 근거가 없다, 애초에 깨져 있지 않았다.
+- **Qwen**: v2에서 1/4(`p030_c01`)만 정확했는데, v4에서는 그 1건마저 UNSUPPORTED로 뒤집혀 **0/4**로
+  악화됐다. v3가 유발한 "애매하면 INSUFFICIENT로 도피" 문제를 피하려고 부정 규칙만 남겼는데, Qwen
+  입장에서는 "관련 내용이 하나라도 있으면 SUPPORTED/UNSUPPORTED 중 하나로만 판정하라"는 문장이 원래
+  정확했던 케이스까지 UNSUPPORTED 쪽으로 더 강하게 밀어붙인 것으로 보인다.
+
+v3-regression 케이스(`p002_c05_3`/`p002_c05_4`/`p003_c02_4`)는 이번엔 안 흔들렸다 — 둘 다 v2와 동일
+verdict 유지. 즉 v3가 만들었던 "기존 정답이 흔들리는" 부작용은 v4에서 재현되지 않았지만, 애초에
+목표했던 "INSUFFICIENT 인식 개선" 자체가 Qwen에서 실패했고 Qwen의 Macro F1만 추가로
+나빠졌다(0.6656→0.5464, `p018_c02_1` 제외 이후 다른 신규 flip 없이 `p030_c01` 하나가 정답→오답으로
+바뀐 영향).
+
+Kanana만 보면 소폭 개선(`p018_c01_2`가 INSUFFICIENT→SUPPORTED로 정답 전환되며 F1 0.7652→0.7992)이지만,
+CLAUDE.md 방침상 두 후보는 동일 프롬프트를 써야 공정 비교가 성립하므로, Qwen에서의 명백한 악화 하나만
+으로도 채택 기준 미달이다.
+
+### 판정: 기각, "production" 라벨 v2 내용으로 복귀 (Langfuse version 6)
+
+채택 기준("v2 대비 FAR/Recall이 나빠지지 않으면서 INSUFFICIENT 4건을 유지")을 Qwen에서 충족하지
+못했다(유지가 아니라 악화). v3에 이어 v4도 기각 — `client.py`의 `SYSTEM_PROMPT`를 v2 내용으로
+되돌렸고, Langfuse "production" 라벨은 새 버전(6, 내용은 v2와 동일)을 가리킨다.
+
+**결론: Qwen의 INSUFFICIENT↔UNSUPPORTED 경계 오분류는 프롬프트 엔지니어링으로 해결되는 문제가
+아닌 것으로 결론짓는다.** 접근 방식이 서로 다른 두 시도(v3=절차+예시 추가, v4=짧은 부정 규칙만 추가)가
+모두 실패했고 결과 방향도 반대였다(v3는 과잉교정으로 기존 정답까지 흔듦, v4는 무변화~악화) — 우연한
+프롬프트 문구 문제가 아니라 Qwen 자체가 "정보 부재"와 "명시적 충돌"을 구분하는 능력이 근본적으로
+약하다는 뜻으로 본다. 이 항목은 이제 "Qwen의 알려진 약점"으로 문서화하고, 프롬프트 반복 시도는 중단한다.
+
+## 다음 단계로 넘길 것 (갱신)
+
+1. ~~v4 프롬프트 검증~~ — 완료, 기각. INSUFFICIENT 인식 문제는 프롬프트로 더 이상 손대지 않는다.
+2. **모델 선정 최종화로 바로 진행** — v2가 최종 프롬프트로 확정됐다(Langfuse production = version 6,
+   내용은 v2와 동일). 두 후보의 트레이드오프:
+   - Qwen: FAR 0.1111 · Recall 0.8571 우위, 단 Macro F1 0.6656 · INSUFFICIENT 인식 0/4(확정된 약점)
+   - Kanana: Macro F1 0.7652 · INSUFFICIENT 인식 4/4 우위, 단 FAR 0.2222로 Qwen보다 나쁨
+   - CLAUDE.md 지표 우선순위(FAR가 핵심)로는 Qwen이 여전히 우세. #15 최종 정리 시 "Qwen은
+     INSUFFICIENT 경계를 프롬프트로 못 고치는 확정된 약점을 안고 간다"는 점을 명시할 것.
+3. **`p002_c04_3`(조건 누락)은 두 모델 다 놓친 진짜 어려운 케이스** — Dev 단계에 이런 "부분 인용 +
    조건 생략" 유형을 더 포함해서 재현되는 패턴인지 확인할 가치 있음.
-3. **`p013_c03_2`(24개월 vs 36개월 최고금리, 0.05%p 차이)도 두 모델 다 놓치는 진짜 어려운 케이스** —
+4. **`p013_c03_2`(24개월 vs 36개월 최고금리, 0.05%p 차이)도 두 모델 다 놓치는 진짜 어려운 케이스** —
    Dev 표본에 인접 기간 간 미세한 숫자 차이 유형을 더 포함해볼 가치 있음.
-4. 숫자 표기 정규화 전처리는 보류 — 재현 빈도가 늘어나면 그때 규칙 기반으로 추가.
-5. v4 검증 후 모델 선정 최종화 — 현재는 Qwen 쪽으로 기울어 있음(FAR/Recall 우위, latency는 감수 가능
-   판단, 도메인 특성상 재질문보다 한 번에 정확한 판정이 더 중요하다는 방향).
+5. 숫자 표기 정규화 전처리는 보류 — 재현 빈도가 늘어나면 그때 규칙 기반으로 추가.
+
+## 참고용 사이드 체크 — Claude API(Sonnet/Haiku)로 상한선 확인
+
+**이 절은 Qwen/Kanana 후보 선정 로직에 영향을 주지 않는다.** CLAUDE.md가 Verifier 후보를 로컬
+3~4B급 SLM 2개로 제한한 이유(대형 모델 호출의 비용·지연을 피하는 것 자체가 이 프로젝트의 핵심 질문)는
+그대로 유효하다. 다만 "이 Verifier 태스크 자체가 지금 v2 프롬프트로 잘 짜여 있는가"를 참고 삼아
+확인하고 싶어서, 동일한 v2 프롬프트·동일한 64건 데이터셋을 로컬 vLLM 대신 Claude API(`claude-sonnet-5`,
+`claude-haiku-4-5-20251001`)로 그대로 돌려봤다(`src/eval/run_eval_claude.py`, temperature는 두 모델
+다 API에서 deprecated라 미지정 — 로컬 후보의 `temperature=0` 고정과는 조건이 다르다는 점 주의).
+
+### 지표가 처음이면 이렇게 읽으면 된다
+
+- **False Accept Rate (FAR)**: 실제로는 틀렸거나(`UNSUPPORTED`) 판단 근거 자체가 없는(`INSUFFICIENT`)
+  claim을, Verifier가 "이 답변은 evidence로 뒷받침된다(`SUPPORTED`)"고 잘못 승인해버린 비율. 금융
+  Verifier에서 가장 위험한 실패 방향이라 CLAUDE.md가 1순위 지표로 못박았다 — 0에 가까울수록
+  좋다(0 = 승인 오류 없음).
+- **Macro F1**: `SUPPORTED`/`UNSUPPORTED`/`INSUFFICIENT` 세 클래스 각각에 대해 precision·recall의
+  조화평균(F1)을 구한 뒤 세 값을 단순평균한 것. 데이터가 `SUPPORTED`에 쏠려 있어도(64건 중 46건)
+  소수 클래스(`UNSUPPORTED` 14건, `INSUFFICIENT` 4건) 성능이 묻히지 않게 해준다 — 판정 3가지를
+  골고루 잘할수록 1에 가깝다.
+- FAR과 Macro F1은 서로 다른 걸 잰다: FAR은 "위험한 실수를 안 하는가"만 보고, Macro F1은 "판정
+  전체를 균형 있게 잘하는가"를 본다. 그래서 아래처럼 한 모델이 FAR은 더 좋은데 F1은 더 나쁜 경우가
+  생길 수 있다.
+
+### 헤드라인 비교
+
+| 지표 | Qwen (로컬) | Kanana (로컬) | Claude Haiku 4.5 | Claude Sonnet 5 |
+|---|---|---|---|---|
+| False Accept Rate | 0.1111 | 0.2222 | **0.0** | 0.0556 |
+| UNSUPPORTED Recall | 0.8571 | 0.7143 | **0.8571** | 0.7857 |
+| Macro F1 | 0.6656 | 0.7652 | 0.7552 | **0.8228** |
+| Schema Valid Rate | 1.0 | 1.0 | 1.0 | 1.0 |
+| Latency p50/p95 | 7.83s/17.05s | 3.84s/7.73s | **1.77s/2.49s** | 3.07s/4.61s |
+
+(latency는 로컬 vLLM batch=1 GPU 서빙 vs hosted Claude API 왕복 시간이라 직접 비교 대상은 아니다 —
+참고 수치로만 본다.)
+
+### 왜 더 작은 모델(Haiku)이 더 큰 모델(Sonnet)보다 FAR·Recall이 좋을까 — "판정을 더 보수적으로 내린다"
+
+Sonnet이 더 큰/최신 모델인데 FAR·Recall에서 Haiku에게 밀리는 게 처음엔 반직관적으로 보이지만,
+예측 분포와 오답 케이스를 까보면 원인이 명확하다.
+
+골드 분포(64건): `SUPPORTED` 46 / `UNSUPPORTED` 14 / `INSUFFICIENT` 4
+
+| | 예측 분포 (S/U/I) | false accept (실제 오류를 SUPPORTED로 승인) | false reject (실제 SUPPORTED를 오판) |
+|---|---|---|---|
+| Sonnet | 44 / 12 / 8 | 1건 (`p003_c02_4`, condition_reversal) | 3건 |
+| Haiku | 38 / 15 / 11 | **0건** | **8건** |
+
+**Haiku는 판정을 훨씬 더 "보수적"으로 내린다** — `INSUFFICIENT`를 11건이나 쓰는데(실제 골드는 4건뿐),
+애매한 상황에서 `SUPPORTED`로 밀어붙이기보다 `UNSUPPORTED`/`INSUFFICIENT` 쪽으로 피하는 경향이 강하다.
+이러면 구조적으로 false accept(FAR의 분자)는 거의 안 생기지만, 그 대가로 실제로는 맞는 claim
+8건(`p002_c04_1`, `p002_c04_2`, `p002_c05_2`, `p018_c01_3`, `p013_c01_4`, `p014_c01_1`, `p014_c01_3`,
+`p014_c02_1`)을 잘못 거부한다 — 이게 Macro F1에서 `SUPPORTED` 클래스의 precision을 깎아 Sonnet보다
+낮은 F1로 이어진다.
+
+**Sonnet은 상대적으로 "균형 잡힌" 판정을 내린다** — false accept 1건(다른 조건과 미세하게 반전된
+claim이라 로컬 두 후보도 비슷하게 어려워했던 유형)과 false reject 3건으로 훨씬 적게 틀리고, 그만큼
+Macro F1이 높다.
+
+즉 이건 "Haiku가 Sonnet보다 이 태스크를 더 잘 이해한다"는 뜻이 아니라, **두 모델이 SUPPORTED/
+UNSUPPORTED/INSUFFICIENT 경계에서 서로 다른 보수성(threshold)으로 판정한다는 캘리브레이션 차이에
+가깝다.** 앞서 v1/v2 분석에서 짚었던 Qwen="strict"/Kanana="loose" 패턴과 정확히 같은 구조다 — 여기서는
+Haiku가 "strict"(애매하면 거부), Sonnet이 "loose"(애매해도 웬만하면 판정) 역할을 하고 있는 셈. false
+reject 8건 중 3건(`p002_c04_2`, `p002_c05_2`, `p014_c02_1`)은 Sonnet의 false reject 3건과도 겹친다 —
+두 모델이 공통으로 판단을 주저하는 claim이 따로 있다는 뜻이라, Dev 단계에서 눈여겨볼 후보다.
+
+### 이 결과가 로컬 후보 선정에 주는 시사점
+
+- Qwen/Kanana 둘 다 Haiku보다 FAR이 나쁘고(0.1111/0.2222 vs 0.0), Kanana는 Sonnet에도 F1로만 근소하게
+  앞선다 — **"이 태스크 자체의 상한이 낮아서 두 로컬 후보가 고전하는 것"이 아니라, 체급이 큰 모델은
+  같은 v2 프롬프트로도 더 낮은 FAR을 뽑아낼 여지가 있다는 뜻**이다. 즉 로컬 두 후보의 현재 성능은
+  "이 태스크의 한계"가 아니라 "이 체급에서 감수해야 하는 트레이드오프"로 해석하는 게 맞다.
+  로컬 후보 선정(Qwen vs Kanana) 결론 자체는 바뀌지 않지만, #15 최종 정리에 이 상한선 비교를
+  "로컬 SLM Verifier의 한계를 정직하게 명시하는 근거"로 인용할 수 있다.
