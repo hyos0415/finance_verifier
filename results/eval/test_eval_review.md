@@ -82,6 +82,40 @@ INSUFFICIENT↔UNSUPPORTED 경계 혼동이 그대로 나타났다 — 이 약�
 
 Pilot에서 관찰됐던 과잉 거부 패턴은 Test에서 재현되지 않았다.
 
+## 참고용 크로스모델 체크 — condition_omission도 INSUFFICIENT처럼 보편적인 약점인가
+
+INSUFFICIENT↔UNSUPPORTED 혼동이 모델 체급과 무관하게 나타났던 것처럼, `condition_omission`도
+그런지 확인하기 위해 같은 53건 Test 셋을 Claude Haiku 4.5·Nemotron Ultra 550B에도 그대로
+돌렸다(Sonnet은 이번엔 비용 대비 실익이 적다고 판단해 제외). `src/eval/run_eval_claude.py`,
+`src/eval/run_eval_nvidia.py`도 `--split test`를 읽도록 같이 파라미터화했다.
+
+| claim_id | 오류유형 | Qwen | Haiku | Nemotron Ultra |
+|---|---|---|---|---|
+| p020_c02 | condition_omission | MISS | **OK** | MISS |
+| p034_c02 | condition_omission | MISS | MISS | MISS |
+| p017_c02 | evidence_mismatch(INSUFFICIENT) | MISS | OK | OK |
+| p024_c01 | missing_information(INSUFFICIENT) | OK | OK | MISS |
+| p025_c01 | fabricated_condition | OK | MISS | OK |
+| p008_c02 | boundary_condition_error | MISS | OK | OK |
+
+| 지표 | Qwen | Haiku | Nemotron Ultra |
+|---|---|---|---|
+| False Accept Rate | 0.1071 | 0.0714 | 0.1071 |
+| UNSUPPORTED Recall | 0.8846 | 0.8462 | 0.8846 |
+| Macro F1 | 0.8434 | 0.8098 | 0.8434 |
+
+**`condition_omission`은 3개 모델·6회 시도 중 단 1건(Haiku의 `p020_c02`)만 맞혔다** —
+INSUFFICIENT 혼동보다도 더 보편적으로 나타나는 약점이다. Qwen(4B)과 Nemotron Ultra(550B)는
+이 유형에서 완전히 동일하게 0/2를 기록했다 — 파라미터 130배 차이가 나는 두 모델이 정확히 같은
+지점에서 같은 실수를 한다는 건, 이게 "작은 모델이라 놓친다"는 체급 문제가 아니라 **"AND로 묶인
+복합조건 중 일부만 언급됐을 때, 언급 안 된 나머지 조건이 있는지"를 evidence 전체와 대조하는
+이 특정 추론 자체가 구조적으로 어렵다**는 뜻으로 읽는다. Haiku만 유일하게 `p020_c02` 하나를
+잡았는데, 이것만으로 "Haiku는 이 유형을 안다"고 결론짓기엔 표본(2건)이 너무 작다.
+
+전체 지표는 Qwen과 Nemotron Ultra가 공교롭게도 완전히 동일하게 나왔다(FAR·Recall·F1 전부
+일치) — condition_omission 2건을 똑같이 놓치고 다른 몇 건에서 갈린 게 서로 상쇄된 우연으로,
+"두 모델의 전반적 성능이 동급"이라는 의미로 확대 해석하지는 않는다.
+
 ## 결론
 
 - **모델/프롬프트 선정은 그대로 유지한다** — Qwen3.5-4B-int4-AutoRound + v2 프롬프트가
@@ -89,5 +123,6 @@ Pilot에서 관찰됐던 과잉 거부 패턴은 Test에서 재현되지 않았�
 - **확정 약점이 두 가지로 늘었다**: ① INSUFFICIENT↔UNSUPPORTED 경계 혼동(Qwen뿐 아니라
   Nemotron Ultra·Gemma-4-31B도 유사 — `smoke_eval_review.md` 참고, 모델 체급과 무관한 태스크
   고유의 한계로 판단), ② **`condition_omission`(AND 복합조건 중 일부만 인용하면 못 잡음)** —
-  이번에 새로 확정. 둘 다 #15 최종 리포트에 "알려진 한계"로 명시한다.
+  이번 크로스모델 체크(Qwen 0/2, Haiku 1/2, Nemotron Ultra 550B 0/2)로 이것도 모델 체급과
+  무관한 태스크 고유의 한계임이 확인됐다. 둘 다 #15 최종 리포트에 "알려진 한계"로 명시한다.
 - **issue #23 완료** — Test(unseen) eval까지 끝났으니 #15(최종 결과 정리)로 넘어간다.

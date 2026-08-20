@@ -25,7 +25,6 @@ from src.verifier.client import SYSTEM_PROMPT
 from src.verifier.schemas import VERIFIER_JSON_SCHEMA, VerifierOutput
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-CLAIM_DATASET_PATH = REPO_ROOT / "data" / "smoke" / "claim_dataset.json"
 RESULTS_DIR = REPO_ROOT / "results" / "eval"
 
 MODEL_NAMES = {
@@ -38,7 +37,8 @@ WARMUP_CLAIM = "12개월 정기예금 기본금리는 연 3.0%이다."
 
 
 def load_claims(split: str) -> list[dict]:
-    claims = json.loads(CLAIM_DATASET_PATH.read_text(encoding="utf-8"))
+    claim_dataset_path = REPO_ROOT / "data" / split / "claim_dataset.json"
+    claims = json.loads(claim_dataset_path.read_text(encoding="utf-8"))
     return [c for c in claims if c["dataset_split"] == split]
 
 
@@ -90,7 +90,7 @@ def run(model_key: str, split: str) -> dict:
     model_name = MODEL_NAMES[model_key]
     claims = load_claims(split)
     if not claims:
-        raise ValueError(f"no claims found for split={split!r} in {CLAIM_DATASET_PATH}")
+        raise ValueError(f"no claims found for split={split!r} in data/{split}/claim_dataset.json")
 
     out_path = RESULTS_DIR / f"{split}_claude-{model_key}_prompt-v2.json"
     predictions = load_checkpoint(out_path)
