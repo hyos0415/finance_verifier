@@ -2,8 +2,9 @@
 
 이슈 #25(`25-latency-optimization` 브랜치) 진행 중 세션 단위 기록. 상세 진단 서사는
 `results/model_selection/qwen_latency_diagnosis.md`(source of truth)에 있고, 이 문서는
-"이 환경에서 실제로 되는 레버 vs 안 되는 레버"만 빠르게 훑어볼 수 있도록 분리한 요약이다.
-최종적으로는 이 내용을 `qwen_latency_diagnosis.md`에 합류시킨다.
+"이 환경에서 실제로 되는 레버 vs 안 되는 레버"를 실험 단위로 자세히 남긴 원본 로그다.
+**최종 결론은 `qwen_latency_diagnosis.md`의 "이슈 #25 실측 결과" 절에 합류 완료** —
+거기서는 결론만 간결하게 보고, 여기서는 각 실험의 로그/표/재현 방법까지 자세히 본다.
 
 대상 체크포인트: `Intel/Qwen3.5-4B-int4-AutoRound` (INT4 AutoRound + Marlin 커널, vLLM
 OpenAI-compatible 서버, RTX 4070 Laptop 8GB + WSL2 + Docker).
