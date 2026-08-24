@@ -1,6 +1,6 @@
 # finance_verifier
 
-금융 답변 검증용 소형 LLM(3~4B) Verifier — AI 엔지니어 1주 과제.
+금융 답변 검증용 소형 LLM(3~4B) Verifier.
 
 📊 **[프로젝트 소개 & 결과 발표](./results/final/report_dashboard.html)** — 무슨 문제를
 풀었는지, 무엇을 발견했는지 누구나 이해하기 쉽게 정리한 발표용 자료 (다운로드 후
