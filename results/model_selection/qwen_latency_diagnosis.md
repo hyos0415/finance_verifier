@@ -141,6 +141,57 @@ GDN 하이브리드 지원이 아직 이 정도 최적화 수준이라는 실측
 우선순위는 `--gdn-prefill-backend` → `--use-replayssm` → CUDA graph 최소 구성 → interactivity →
 optimization-level 순으로 본다(표적화된 정도, 구현 난이도 순).
 
+## 이슈 #25 실측 결과 — CUDA Graph 활성화로 batch=1 decode 3.6배 개선
+
+위 5개 후보를 이슈 #25(`25-latency-optimization` 브랜치)에서 실제로 검증했다. 상세 실험 로그·표는
+`results/latency/capability_and_results.md`에 있고, 여기(source of truth)에는 최종 결론만
+옮겨 적는다.
+
+### 결론: 유효한 레버는 딱 하나 — 서빙 용량(`max-num-seqs`) 재설계로 CUDA Graph를 켜는 것
+
+| 후보 | 결과 |
+|---|---|
+| 1. `--gdn-prefill-backend {flashinfer,cutedsl}` | 이 GPU(Ada Lovelace, SM89)에서 미지원 → `auto`와 동일한 `triton`으로 자동 폴백. 측정 불가 |
+| 2. `--use-replayssm` | 부팅 자체가 실패(Nemotron-H 전용, Qwen3.5 아키텍처엔 적용 불가) |
+| 3. CUDA graph batch=1 최소 구성(`--enforce-eager` 제거 + `--max-num-seqs 1` + `--max-model-len 1024`) | **채택 — eager 대비 ~3.6배**(12.4→44.26 tok/s, Test 53건 전체 순차 실행 기준) |
+| 4. `--performance-mode interactivity` | 3번 대비 차이 없음(43.94 tok/s, 노이즈 수준) |
+| 5. `--optimization-level 3`(O3) | 3+4번 대비도 차이 없음(43.98 tok/s) |
+| 3번의 decode-only 세부 튜닝(`-cc.cudagraph_mode=FULL_DECODE_ONLY`) | 실측 없이 스킵 — prefill은 요청당 1회뿐이라 손댈 여지가 이미 작고, 같은 계열인 4·5번이 효과 없었음 |
+
+`--enforce-eager`를 그냥 빼면 기본 `max_num_seqs=256`이 GDN 하이브리드 구조의 Mamba cache
+block 예산(8GB에서 확보 가능한 건 64개뿐)을 초과해 서버가 부팅도 못 하고 죽는다. `max_num_seqs`
+를 워크로드 실제 크기로 낮추면 이 예산 문제가 사라지고 CUDA Graph가 정상적으로 capture된다 —
+이게 유일하게 효과가 있었던 레버였다. GDN prefill 커널 선택이나 SSM state 재사용, 컴파일
+강도 조절 같은 더 표적화된 옵션들은 이 GPU 세대·이 모델 아키텍처 조합에서는 전부 선택지가
+아니었거나 이미 확보한 개선 이상으로 나아가지 못했다.
+
+### 정확성 회귀 체크 — `--max-model-len` 2048→1024 축소로 인한 부작용 없음
+
+Test(unseen) 53건 전체를 실제 Qwen tokenizer로 재확인한 결과 prompt 잘림 위험은 0건(최장
+claim도 885/1024 토큰). 53건 재실행 결과 핵심 지표(False Accept Rate 0.1071, UNSUPPORTED
+Recall 0.8846)는 baseline과 완전히 동일했고, 딱 1건(`p024_c01`, INSUFFICIENT)만 결과가
+바뀌었다 — `temperature=0`에 동일 입력·동일 가중치인데도 eager vs CUDA-graph 실행 경로의
+부동소수점 차이가 이미 알려진 취약 경계(INSUFFICIENT↔UNSUPPORTED)를 흔든 것으로 해석한다.
+Macro F1 하락(0.8434→0.6151)은 INSUFFICIENT 표본이 2건뿐이라 1건 flip이 과대 증폭된 표본
+크기 문제로, 핵심 지표(FAR·Recall)는 영향받지 않았다.
+
+### 서빙 용량(`max-num-seqs`) 최종 채택 — 1이 아니라 4
+
+`max-num-seqs`를 1/2/4/8로 스윕한 결과 처리량은 계속 늘지만 선형이 아니고(8배 동시요청에
+3.9배), 개별 요청 latency는 늘어난다. GPU 피크 VRAM 증가도 완만하다(seqs 1→8 사이 약
+410MB, WSL2 실사용 한도까지 여유 충분). 답변 1개가 여러 atomic claim으로 쪼개지는 실제
+워크로드(Test셋 평균 1.89개, 최대 2개; Smoke셋 평균 5.82개, 최대 11개)를 감안해
+**`--max-num-seqs=4`를 최종 서빙 설정으로 채택**했고, `scripts/run_vllm_container.sh`의
+기본값도 이에 맞춰 갱신했다(`--enforce-eager` 제거, `--max-model-len 1024 --max-num-seqs 4`).
+
+k6로 VU 1/4/8/16 부하테스트를 돌려 vLLM의 multi-user 서빙 장점도 확인했다 — 서버 용량(4)을
+넘는 동시 사용자도 거부되지 않고 큐에서 대기하며(latency가 오버구독 비율에 거의 선형으로
+증가), 4배 오버구독(VU=16)에서도 에러 0%·schema valid 100%.
+
+각 옵션(`--enforce-eager`/`--max-num-seqs`/`--gdn-prefill-backend`/`--use-replayssm`/
+`--performance-mode`/`--optimization-level`)이 정확히 무엇을 하는지는
+`notes/vllm_serving_modes.md`(개인 메모, git 미추적)에 정리했다.
+
 ## 나중에 볼 것 (지금은 스코프 밖)
 
 Qwen3.5의 GDN(선형 어텐션) 병목 자체를 vLLM/Triton 커널 레벨에서 해소하려는 외부 연구가 있다
