@@ -1,0 +1,804 @@
+<title>Finance Claim Verifier</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #1A2233;
+    --ink-soft: #55606E;
+    --ink-faint: #7C8794;
+    --paper: #EEF1EF;
+    --surface: #FFFFFF;
+    --surface-sunken: #E5E9E6;
+    --line: #D6DBD7;
+    --line-strong: #BCC3BE;
+    --accent: #1F3A5C;
+    --accent-soft: #DCE4EC;
+    --accent-2: #A9782F;
+    --accent-2-soft: #F1E6D2;
+    --good: #1E8A5F;
+    --good-soft: #DCEFE5;
+    --warn: #9C6B14;
+    --warn-soft: #F3E6C9;
+    --crit: #A93A3A;
+    --crit-soft: #F5E1DF;
+    --shadow: 0 1px 2px rgba(26,34,51,0.06), 0 8px 24px -12px rgba(26,34,51,0.12);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ink: #E7E9E4;
+      --ink-soft: #A9B1BC;
+      --ink-faint: #7E8894;
+      --paper: #12161C;
+      --surface: #1A2029;
+      --surface-sunken: #10141A;
+      --line: #2A313B;
+      --line-strong: #3A424E;
+      --accent: #8FB0D6;
+      --accent-soft: #223244;
+      --accent-2: #D9AE5C;
+      --accent-2-soft: #33291A;
+      --good: #4CBE84;
+      --good-soft: #163627;
+      --warn: #D9A63B;
+      --warn-soft: #3A2E14;
+      --crit: #E1685F;
+      --crit-soft: #3A2220;
+      --shadow: 0 1px 2px rgba(0,0,0,0.4), 0 8px 24px -12px rgba(0,0,0,0.6);
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --ink: #E7E9E4;
+    --ink-soft: #A9B1BC;
+    --ink-faint: #7E8894;
+    --paper: #12161C;
+    --surface: #1A2029;
+    --surface-sunken: #10141A;
+    --line: #2A313B;
+    --line-strong: #3A424E;
+    --accent: #8FB0D6;
+    --accent-soft: #223244;
+    --accent-2: #D9AE5C;
+    --accent-2-soft: #33291A;
+    --good: #4CBE84;
+    --good-soft: #163627;
+    --warn: #D9A63B;
+    --warn-soft: #3A2E14;
+    --crit: #E1685F;
+    --crit-soft: #3A2220;
+    --shadow: 0 1px 2px rgba(0,0,0,0.4), 0 8px 24px -12px rgba(0,0,0,0.6);
+  }
+
+  * { box-sizing: border-box; }
+  html { text-size-adjust: 100%; }
+
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: 'IBM Plex Sans KR', 'Malgun Gothic', 'Apple SD Gothic Neo', -apple-system, sans-serif;
+    font-size: 15.5px;
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  a { color: var(--accent); }
+  a:focus-visible, button:focus-visible, summary:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  .mono {
+    font-family: 'IBM Plex Mono', 'SFMono-Regular', Consolas, monospace;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .wrap {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 0 24px;
+  }
+
+  /* ---------- top bar ---------- */
+  .topbar {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    background: color-mix(in srgb, var(--paper) 88%, transparent);
+    backdrop-filter: blur(6px);
+    border-bottom: 1px solid var(--line);
+  }
+  .topbar-inner {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 12px 24px;
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 16px;
+  }
+  .topbar-name {
+    font-weight: 700;
+    font-size: 0.92rem;
+    letter-spacing: 0.01em;
+  }
+  .topbar-tag {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.72rem;
+    color: var(--ink-faint);
+    letter-spacing: 0.04em;
+  }
+
+  /* ---------- hero ---------- */
+  .hero {
+    padding: 56px 0 40px;
+    position: relative;
+  }
+  .eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    margin: 0 0 18px;
+  }
+  .eyebrow::before {
+    content: "";
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--good);
+    box-shadow: 0 0 0 3px var(--good-soft);
+  }
+  h1.title {
+    font-size: clamp(1.9rem, 4vw, 2.5rem);
+    line-height: 1.22;
+    letter-spacing: -0.01em;
+    margin: 0 0 14px;
+    text-wrap: balance;
+    max-width: 16ch;
+  }
+  .hero-sub {
+    max-width: 62ch;
+    color: var(--ink-soft);
+    font-size: 1.04rem;
+    margin: 0 0 28px;
+  }
+  .stamp {
+    position: absolute;
+    top: 44px;
+    right: 24px;
+    width: 108px;
+    height: 108px;
+    border: 2.5px solid var(--accent);
+    border-radius: 50%;
+    color: var(--accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transform: rotate(-11deg);
+    opacity: 0.9;
+  }
+  .stamp-inner {
+    text-align: center;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.62rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    line-height: 1.5;
+  }
+  .stamp-inner .big { font-size: 0.98rem; display: block; }
+  @media (max-width: 620px) { .stamp { display: none; } }
+
+  /* ---------- section scaffolding ---------- */
+  section { padding: 40px 0; border-top: 1px solid var(--line); }
+  section:first-of-type { border-top: none; }
+  .section-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 22px;
+    flex-wrap: wrap;
+  }
+  .section-num {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.74rem;
+    color: var(--ink-faint);
+    letter-spacing: 0.03em;
+  }
+  h2 {
+    font-size: 1.34rem;
+    margin: 4px 0 0;
+    letter-spacing: -0.005em;
+    text-wrap: balance;
+  }
+  h3 {
+    font-size: 1.02rem;
+    margin: 0 0 4px;
+  }
+  p { margin: 0 0 12px; }
+  .lede {
+    color: var(--ink-soft);
+    max-width: 68ch;
+    margin: 0 0 24px;
+  }
+  .note { color: var(--ink-soft); font-size: 0.92rem; }
+  .finding {
+    font-weight: 600;
+    margin-top: 18px;
+    padding: 12px 16px;
+    background: var(--accent-soft);
+    border-radius: 8px;
+    display: inline-block;
+  }
+
+  /* ---------- evidence vs answer compare (problem framing) ---------- */
+  .cmp-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin-bottom: 18px;
+  }
+  @media (max-width: 620px) { .cmp-grid { grid-template-columns: 1fr; } }
+  .cmp-card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 18px 20px;
+  }
+  .cmp-card.chosen { border-color: var(--good); box-shadow: 0 0 0 1px var(--good) inset; }
+  .cmp-card.flaw { border-color: var(--crit); box-shadow: 0 0 0 1px var(--crit) inset; }
+  .cmp-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+  .cmp-title { font-weight: 700; font-size: 0.98rem; }
+  .cmp-sub { font-size: 0.78rem; color: var(--ink-faint); margin-top: 2px; }
+  .verdict-badge {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.64rem;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    padding: 3px 8px;
+    border-radius: 5px;
+    white-space: nowrap;
+  }
+  .verdict-badge.chosen { background: var(--good-soft); color: var(--good); }
+  .verdict-badge.rejected { background: var(--surface-sunken); color: var(--ink-faint); }
+  .verdict-badge.flaw { background: var(--crit-soft); color: var(--crit); }
+  .cmp-quote {
+    font-size: 1.02rem;
+    font-weight: 600;
+    line-height: 1.5;
+    margin: 0 0 10px;
+  }
+  .cmp-list { margin: 0; padding-left: 1.2em; font-size: 0.92rem; }
+  .cmp-list li { margin-bottom: 6px; }
+  .cmp-list li.missing { color: var(--crit); font-weight: 600; }
+
+  .bar-row { display: flex; align-items: center; gap: 10px; margin: 9px 0; }
+  .bar-row .bl { flex: 0 0 168px; font-size: 0.8rem; color: var(--ink-soft); }
+  .bar-track {
+    flex: 1;
+    height: 8px;
+    background: var(--surface-sunken);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  .bar-fill { height: 100%; border-radius: 4px 0 0 4px; }
+  .bar-fill.accent { background: var(--accent); }
+  .bar-fill.muted { background: var(--ink-faint); }
+  .bar-row .bv {
+    flex: 0 0 56px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.8rem;
+    text-align: right;
+    color: var(--ink);
+  }
+
+  /* ---------- flow (big AI -> small AI / pipeline) ---------- */
+  .flow {
+    display: flex;
+    align-items: stretch;
+    gap: 0;
+    flex-wrap: wrap;
+  }
+  .fl-step {
+    flex: 1 1 150px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 16px 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 150px;
+  }
+  .fl-step .k {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.66rem;
+    color: var(--ink-faint);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .fl-step .v { font-weight: 700; font-size: 1rem; }
+  .fl-step .d { font-size: 0.82rem; color: var(--ink-soft); }
+  .fl-step.emph { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent) inset; }
+  .fl-arrow {
+    flex: 0 0 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--ink-faint);
+    font-size: 1.1rem;
+  }
+  @media (max-width: 700px) {
+    .flow { flex-direction: column; }
+    .fl-arrow { transform: rotate(90deg); flex: 0 0 24px; }
+  }
+  .fl-out {
+    display: flex;
+    gap: 6px;
+    margin-top: 4px;
+    flex-wrap: wrap;
+  }
+  .chip {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.66rem;
+    padding: 2px 7px;
+    border-radius: 5px;
+    font-weight: 600;
+  }
+  .chip.good { background: var(--good-soft); color: var(--good); }
+  .chip.crit { background: var(--crit-soft); color: var(--crit); }
+  .chip.warn { background: var(--warn-soft); color: var(--warn); }
+
+  .env-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 12px;
+    margin-top: 16px;
+  }
+  .env-card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 14px 16px;
+    text-align: center;
+  }
+  .env-card .v { font-weight: 700; font-size: 0.96rem; }
+  .env-card .d { font-size: 0.78rem; color: var(--ink-faint); margin-top: 3px; }
+
+  /* ---------- FAR explainer (10 boxes) ---------- */
+  .far-demo { display: flex; align-items: center; gap: 24px; flex-wrap: wrap; }
+  .far-boxes { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; flex: 1 1 260px; max-width: 300px; }
+  .far-box {
+    aspect-ratio: 1;
+    border-radius: 7px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.62rem;
+    font-weight: 600;
+    background: var(--good-soft);
+    color: var(--good);
+  }
+  .far-box.leak { background: var(--crit-soft); color: var(--crit); }
+  .far-callout {
+    flex: 0 0 auto;
+    text-align: center;
+    padding: 12px 22px;
+    border: 1.5px dashed var(--crit);
+    border-radius: 10px;
+  }
+  .far-callout .x { font-family: 'IBM Plex Mono', monospace; font-size: 1.7rem; font-weight: 700; color: var(--crit); line-height: 1; }
+  .far-callout .l { font-size: 0.72rem; color: var(--ink-soft); margin-top: 4px; max-width: 16ch; }
+
+  /* ---------- limitation cards ---------- */
+  .lim-card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-left: 4px solid var(--warn);
+    border-radius: 8px;
+    padding: 16px 20px;
+    margin-bottom: 14px;
+  }
+  .lim-head { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; flex-wrap: wrap; }
+  .lim-num {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.68rem;
+    color: var(--warn);
+    background: var(--warn-soft);
+    padding: 2px 7px;
+    border-radius: 5px;
+    font-weight: 600;
+  }
+  .status-grid {
+    display: flex;
+    gap: 8px;
+    margin-top: 10px;
+    flex-wrap: wrap;
+  }
+  .status-chip {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.78rem;
+    background: var(--surface-sunken);
+    padding: 5px 10px;
+    border-radius: 6px;
+  }
+  .status-dot { width: 7px; height: 7px; border-radius: 50%; flex: none; }
+  .status-dot.miss { background: var(--crit); }
+  .status-dot.ok { background: var(--good); }
+
+  /* ---------- latency ---------- */
+  .lat-wrap {
+    display: flex;
+    align-items: center;
+    gap: 28px;
+    flex-wrap: wrap;
+  }
+  .lat-bars {
+    display: flex;
+    align-items: flex-end;
+    gap: 22px;
+    height: 140px;
+    flex: 1 1 220px;
+    min-width: 220px;
+  }
+  .lat-bar-col { display: flex; flex-direction: column; align-items: center; gap: 8px; height: 100%; justify-content: flex-end; }
+  .lat-bar { width: 56px; border-radius: 5px 5px 0 0; }
+  .lat-bar.before { background: var(--ink-faint); }
+  .lat-bar.after { background: var(--accent); }
+  .lat-bar-val { font-family: 'IBM Plex Mono', monospace; font-size: 0.82rem; font-weight: 600; }
+  .lat-bar-lbl { font-size: 0.76rem; color: var(--ink-soft); text-align: center; }
+  .lat-multiplier {
+    flex: 0 0 auto;
+    text-align: center;
+    padding: 10px 22px;
+    border: 1.5px dashed var(--accent);
+    border-radius: 10px;
+  }
+  .lat-multiplier .x { font-family: 'IBM Plex Mono', monospace; font-size: 2.1rem; font-weight: 700; color: var(--accent); line-height: 1; }
+  .lat-multiplier .l { font-size: 0.72rem; color: var(--ink-soft); margin-top: 4px; }
+
+  /* ---------- next steps ---------- */
+  .next-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 14px;
+  }
+  .next-card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 16px 18px;
+  }
+  .next-card .q {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.66rem;
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-bottom: 6px;
+    display: block;
+  }
+  .next-card p { margin: 0; font-size: 0.92rem; color: var(--ink-soft); }
+
+  /* ---------- disclaimer / seal ---------- */
+  .seal-band {
+    background: var(--accent-2-soft);
+    border: 1px solid color-mix(in srgb, var(--accent-2) 40%, transparent);
+    border-radius: 12px;
+    padding: 26px 28px;
+    display: flex;
+    gap: 22px;
+    align-items: flex-start;
+  }
+  .seal-mark {
+    flex: none;
+    width: 58px; height: 58px;
+    border-radius: 50%;
+    border: 2px solid var(--accent-2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'IBM Plex Mono', monospace;
+    font-weight: 700;
+    color: var(--accent-2);
+    font-size: 0.6rem;
+    text-align: center;
+    line-height: 1.3;
+  }
+  .seal-band h3 { color: color-mix(in srgb, var(--accent-2) 70%, var(--ink) 30%); margin-bottom: 8px; }
+  .seal-band p { color: var(--ink); margin-bottom: 10px; font-size: 0.94rem; }
+  .seal-band p:last-child { margin-bottom: 0; }
+
+  footer {
+    padding: 32px 0 56px;
+    color: var(--ink-faint);
+    font-size: 0.86rem;
+  }
+  footer a { color: var(--ink-soft); }
+  footer p { margin: 0 0 8px; }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .cmp-card, .lim-card, .fl-step, .env-card, .next-card { transition: transform 0.15s ease; }
+  }
+</style>
+
+<div class="topbar">
+  <div class="topbar-inner">
+    <span class="topbar-name">Finance Claim Verifier</span>
+    <span class="topbar-tag">발표용 요약 · 2026.08</span>
+  </div>
+</div>
+
+<div class="wrap">
+  <div class="hero">
+    <div class="stamp">
+      <div class="stamp-inner">VERIFIER<span class="big">CONFIRMED</span>QWEN3.5-4B</div>
+    </div>
+    <p class="eyebrow">1주 프로젝트 · 결과 정리</p>
+    <h1 class="title">AI의 답변, 어디까지 믿어도 될까?</h1>
+    <p class="hero-sub">
+      노트북 GPU 한 대에서 돌아가는 작은 AI(3~4B)를 이용해, 금융 답변이 실제 공시
+      근거와 맞는지 검증하는 실험을 해봤다. 무엇을 발견했는지 쉬운 말로 정리했다.
+    </p>
+  </div>
+
+  <section>
+    <div class="section-head">
+      <div><span class="section-num">01</span><h2>숫자는 맞는데, 답변은 틀릴 수 있다</h2></div>
+    </div>
+    <p class="lede">
+      실제로 있는 예금 상품 하나를 보자. 금융상품에서는 조건 하나가 빠지면 답변의
+      의미 자체가 바뀐다.
+    </p>
+    <div class="cmp-grid">
+      <div class="cmp-card chosen">
+        <div class="cmp-head">
+          <div><div class="cmp-title">공식 정보</div><div class="cmp-sub">SC제일은행 · e-그린세이브예금 (12개월)</div></div>
+        </div>
+        <p class="cmp-quote">기본금리 3.65% · 조건 충족 시 최고 3.85%</p>
+        <ul class="cmp-list">
+          <li>① 5천만원 이상 가입</li>
+          <li>② 만기 기준 펀드 3천만원 이상 보유</li>
+        </ul>
+        <p class="note" style="margin:8px 0 0">① <b>그리고</b> ② 를 모두 만족해야 3.85%</p>
+      </div>
+      <div class="cmp-card flaw">
+        <div class="cmp-head">
+          <div><div class="cmp-title">AI 답변</div><div class="cmp-sub">이 상품을 설명한 문장</div></div>
+          <span class="verdict-badge flaw">조건 누락</span>
+        </div>
+        <p class="cmp-quote">"이 상품은 조건 충족 시 연 3.85%의 금리를 제공합니다."</p>
+        <ul class="cmp-list">
+          <li>숫자 3.85%는 원문에 실제로 있음</li>
+          <li class="missing">조건 ②(펀드 보유)가 빠짐</li>
+        </ul>
+      </div>
+    </div>
+    <p class="finding">→ 검색이 맞아도, 답변을 만드는 과정에서 조건이 빠지며 다시 틀릴 수 있다.</p>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <div><span class="section-num">02</span><h2>큰 AI가 쓰고, 작은 AI가 다시 확인한다</h2></div>
+    </div>
+    <p class="lede">
+      검증이라는 일은 답변을 새로 쓰는 것보다 범위가 훨씬 좁다. 이 좁은 역할이면
+      작은 모델로도 충분하지 않을까 — 이게 이번 실험의 가설이다.
+    </p>
+    <div class="flow">
+      <div class="fl-step"><span class="k">Step 1</span><span class="v">큰 AI</span><span class="d">금융 답변을 생성</span></div>
+      <div class="fl-arrow">→</div>
+      <div class="fl-step emph"><span class="k">Step 2</span><span class="v">작은 AI (검증만)</span><span class="d">새 답변을 쓰지 않고, 근거와 맞는지만 확인</span></div>
+      <div class="fl-arrow">→</div>
+      <div class="fl-step"><span class="k">결과</span><span class="v">맞음 / 틀림 / 정보 부족</span><span class="d">셀 중 하나로만 판정</span></div>
+    </div>
+    <div class="env-grid">
+      <div class="env-card"><div class="v">RTX 4070 Laptop · 8GB</div><div class="d">실제 개인 노트북 제약 안에서 검증</div></div>
+      <div class="env-card"><div class="v">Qwen3.5-4B</div><div class="d">최종 채택 모델</div></div>
+      <div class="env-card"><div class="v">Kanana-2-3B</div><div class="d">비교 후보, 비교 후 탈락</div></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <div><span class="section-num">03</span><h2>긴 답변을 작은 사실로 쪼개고, 하나씩 확인했다</h2></div>
+    </div>
+    <p class="lede">
+      한 문장 안에 여러 조건이 섞여 있으면 무엇이 틀렸는지 구분하기 어렵다. 그래서
+      답변 전체를 "그럴듯한가?"로 보지 않고, "각 사실이 근거와 맞는가?"를 하나씩 물었다.
+    </p>
+    <div class="flow">
+      <div class="fl-step"><span class="k">Input</span><span class="v">금융 답변</span><span class="d">"12개월 3.65%, 조건 충족 시 3.85%"</span></div>
+      <div class="fl-arrow">→</div>
+      <div class="fl-step"><span class="k">쪼개기</span><span class="v">독립된 사실 2~3개</span><span class="d">문장을 더 작은 단위로 분리</span></div>
+      <div class="fl-arrow">→</div>
+      <div class="fl-step emph"><span class="k">확인</span><span class="v">작은 AI가 대조</span><span class="d">공식 정보와 하나씩 비교해 판정</span>
+        <div class="fl-out">
+          <span class="chip good">맞음</span>
+          <span class="chip crit">틀림</span>
+          <span class="chip warn">정보 부족</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <div><span class="section-num">04</span><h2>가장 위험한 실수를 먼저 정했다</h2></div>
+    </div>
+    <p class="lede">
+      검증기가 할 수 있는 실수는 두 가지다 — 맞는 답을 틀렸다고 거부하는 것(불편하지만
+      안전), 틀린 답을 맞다고 승인하는 것(사용자가 잘못된 정보를 그대로 믿게 됨).
+      이 프로젝트는 후자를 최우선으로 줄이도록 설계했다.
+    </p>
+    <div class="far-demo">
+      <div class="far-boxes">
+        <div class="far-box">맞음</div><div class="far-box">맞음</div><div class="far-box">맞음</div><div class="far-box">맞음</div><div class="far-box">맞음</div>
+        <div class="far-box">맞음</div><div class="far-box">맞음</div><div class="far-box">맞음</div><div class="far-box">맞음</div><div class="far-box leak">놓침</div>
+      </div>
+      <div class="far-callout">
+        <span class="x">10%</span>
+        <div class="l">틀린 답변 10개 중<br>1개를 잘못 "맞다"고<br>승인한 경우</div>
+      </div>
+    </div>
+    <p class="note" style="margin-top:14px">이 비율을 <b>False Accept Rate</b>라고 부른다 — 낮을수록 안전하다.</p>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <div><span class="section-num">05</span><h2>결과 — Qwen3.5-4B를 최종 채택</h2></div>
+    </div>
+    <p class="lede">
+      한 번도 튜닝에 쓰지 않은 새로운 문제 53개로 마지막 확인을 했다.
+    </p>
+    <div class="cmp-grid">
+      <div class="cmp-card chosen">
+        <div class="cmp-head">
+          <div><div class="cmp-title">Qwen3.5-4B</div><div class="cmp-sub">최종 채택</div></div>
+          <span class="verdict-badge chosen">채택</span>
+        </div>
+        <div class="bar-row"><span class="bl">틀린 답 잘못 승인</span><div class="bar-track"><div class="bar-fill accent" style="width:22%"></div></div><span class="bv mono">10.7%</span></div>
+        <div class="bar-row"><span class="bl">틀린 답 제대로 잡음</span><div class="bar-track"><div class="bar-fill accent" style="width:88%"></div></div><span class="bv mono">88.5%</span></div>
+      </div>
+      <div class="cmp-card">
+        <div class="cmp-head">
+          <div><div class="cmp-title">Kanana-2-3B</div><div class="cmp-sub">비교 후 탈락</div></div>
+          <span class="verdict-badge rejected">탈락</span>
+        </div>
+        <div class="bar-row"><span class="bl">틀린 답 잘못 승인</span><div class="bar-track"><div class="bar-fill muted" style="width:44%"></div></div><span class="bv mono">22.2%</span></div>
+        <div class="bar-row"><span class="bl">틀린 답 제대로 잡음</span><div class="bar-track"><div class="bar-fill muted" style="width:71%"></div></div><span class="bv mono">71.4%</span></div>
+      </div>
+    </div>
+    <p class="note">
+      Kanana는 다른 몇몇 지표에서 더 좋았지만, 가장 위험한 실수(틀린 답 잘못 승인)를
+      더 많이 저질렀다 — 그래서 탈락시켰다. 형식 오류(정해진 답변 틀을 못 지킨 경우)는
+      53건 모두 0건이었다.
+    </p>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <div><span class="section-num">06</span><h2>진행하며 만난 두 가지 한계</h2></div>
+    </div>
+
+    <div class="lim-card">
+      <div class="lim-head"><span class="lim-num">한계 1</span><h3 style="margin:0">"정보가 없다"와 "명백히 틀렸다"를 헷갈린다</h3></div>
+      <p class="note" style="margin-bottom:0">
+        공시 자료에 애초에 관련 내용이 없는 경우와, 있는데 답변이 그걸 반박하는 경우를
+        잘 구분하지 못했다. 프롬프트를 두 가지 방식으로 고쳐봤지만 도움이 안 됐고,
+        오히려 기존에 잘 맞히던 것까지 흔들리는 부작용이 있어 포기했다.
+      </p>
+    </div>
+
+    <div class="lim-card">
+      <div class="lim-head"><span class="lim-num">한계 2</span><h3 style="margin:0">여러 조건 중 "언급 안 된 조건"을 못 찾는다</h3></div>
+      <p class="note" style="margin-bottom:8px">
+        위 e-그린세이브예금 사례처럼, 조건 A·B를 모두 만족해야 하는데 답변이 A만
+        언급하면, 그것만 보고 "맞다"고 승인하는 경향이 있었다. <b>모델을 훨씬
+        키워도(130배 큰 모델) 똑같이 놓쳤다</b> — 크기로 저절로 해결되는 문제가 아니다.
+      </p>
+      <div class="status-grid">
+        <span class="status-chip"><span class="status-dot miss"></span>Qwen 3.5-4B — 0 / 2</span>
+        <span class="status-chip"><span class="status-dot ok"></span>Claude Haiku (참고, 훨씬 큰 모델) — 1 / 2</span>
+        <span class="status-chip"><span class="status-dot miss"></span>Nemotron Ultra 550B (참고, 훨씬 큰 모델) — 0 / 2</span>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <div><span class="section-num">07</span><h2>예상 밖의 발견 — 더 작은 모델인데 더 느렸다</h2></div>
+    </div>
+    <p class="lede">
+      가볍게 압축한 버전이라 당연히 더 빠를 거라 예상했는데, 실측해보니 오히려 더
+      느렸다. 원인은 모델이 아니라 <b>서버가 실제 사용 패턴보다 훨씬 큰 동시 처리
+      용량을 잡아둔 것</b>이었다 — 실제로는 검증 요청이 한 번에 하나씩 들어오는데,
+      서버는 수백 개를 동시에 받을 준비를 하고 있었다. 이 값을 실제 사용량에 맞게
+      줄이자 GPU의 반복 연산 가속 기능이 정상적으로 켜졌다.
+    </p>
+    <div class="lat-wrap">
+      <div class="lat-bars">
+        <div class="lat-bar-col">
+          <span class="lat-bar-val mono">12.4</span>
+          <div class="lat-bar before" style="height:28%"></div>
+          <span class="lat-bar-lbl">처음<br>(초당 단어 수)</span>
+        </div>
+        <div class="lat-bar-col">
+          <span class="lat-bar-val mono">44.3</span>
+          <div class="lat-bar after" style="height:100%"></div>
+          <span class="lat-bar-lbl">서버 설정 조정 후<br>(초당 단어 수)</span>
+        </div>
+      </div>
+      <div class="lat-multiplier">
+        <span class="x">×3.6</span>
+        <div class="l">판정 정확도는<br>그대로 유지</div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <div><span class="section-num">08</span><h2>다음 질문</h2></div>
+    </div>
+    <div class="next-grid">
+      <div class="next-card">
+        <span class="q">Q1</span>
+        <p>작은 AI가 "잘하는 것"과, 검증 구조 자체가 "잘하는 것"을 나눌 수 있을까?
+        "언급 안 된 조건 찾기"는 자연어 이해만으로는 계속 어려울 수 있다.</p>
+      </div>
+      <div class="next-card">
+        <span class="q">Q2</span>
+        <p>조건 목록을 구조적으로 비교하는 별도 체크를, 자연어 검증과 함께 쓰는
+        방식(hybrid 검증)이 다음 실험 후보다.</p>
+      </div>
+      <div class="next-card">
+        <span class="q">Q3</span>
+        <p>실제 사용 패턴에 맞춘 서버 설정이, 모델 선택보다 응답 속도에 더 큰 영향을
+        줄 수 있다는 것도 이번에 확인한 것 중 하나다.</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <div><span class="section-num">09</span><h2>숫자만으로는 안 되는 것</h2></div>
+    </div>
+    <div class="seal-band">
+      <div class="seal-mark">참고<br>자료<br>ONLY</div>
+      <div>
+        <h3>이 결과는 금융 상담·투자 결정의 근거가 아닙니다</h3>
+        <p>
+          정확한 검증기를 만들어도 못 푸는 문제가 하나 있다 — 원본 공시 문구 자체가
+          애매한 경우다. 예를 들어 어떤 상품의 우대조건은 "각 0.10%p"가 각 항목마다
+          따로 붙는 건지, 하위 조건 단위로 붙는 건지 문구만으로 완전히 명확하지 않다.
+          이럴 땐 아무리 정확한 AI라도 100% 확신 있는 답을 줄 수 없다.
+        </p>
+        <p>
+          <strong>정확한 상담은 반드시 해당 금융회사 영업점 방문 또는 전문 상담사와의
+          상담을 통해 확인해야 한다.</strong>
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <p>발표용 요약 자료 — 기술적으로 더 깊은 내용(지표 정의, 전체 실험 로그, 재현 방법)은
+    리포지토리의 <span class="mono">results/final/report.md</span>와
+    <span class="mono">README.md</span>에 정리되어 있다.</p>
+    <p>이슈 #1–#14, #23, #25 완료 · 본 자료로 #15(최종 결과 정리) 종료.</p>
+  </footer>
+</div>
