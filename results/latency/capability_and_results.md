@@ -269,9 +269,40 @@ VRAM 여유는 충분) 요청 큐 앞단에 별도 rate limiting/timeout 정책�
 
 ---
 
+## 이슈 #25 실측 후보 4·5 — `--performance-mode interactivity` / `--optimization-level O3`
+
+CUDA graph batch=1(`--max-num-seqs 1`) 구성 위에 두 옵션을 각각 추가로 얹어, 동일한 방법론
+(Test 53건 전체를 순차 호출, `usage.completion_tokens` 기준 tok/s + latency percentile)으로
+측정했다.
+
+| Config | aggregate tok/s | p50 | p95 | p99 |
+|---|---:|---:|---:|---:|
+| CUDA graph batch=1 (기준) | 44.26 | 2.60s | 3.98s | 4.42s |
+| + `--performance-mode interactivity` | 43.94 | 2.59s | 3.96s | 4.02s |
+| + interactivity + `--optimization-level 3` | 43.98 | 2.53s | 3.89s | 4.36s |
+
+**둘 다 유의미한 차이 없음(노이즈 수준).** `max-num-seqs=1`로 이미 CUDA graph capture size가
+`[1, 2]`로 최소화돼 있어서, "작은 배치 latency 우선"(interactivity)이나 "더 공격적인 컴파일"
+(O3)이 추가로 개선할 여지가 거의 없었던 것으로 보인다. 각 옵션이 정확히 뭘 하는지와 이 실측
+근거는 `notes/vllm_serving_modes.md`에 정리했다.
+
+`--gdn-prefill-backend`(1번)와 `--use-replayssm`(2번)은 각각 이 GPU 세대에서 미지원 커널로
+폴백되거나(triton으로 자동 귀결, 측정 불가), 모델 아키텍처 전제조건 불충족으로 부팅 자체가
+실패해 애초에 측정 대상이 아니었다(이전 세션에 이미 확인, 위 "불가능한 것" 절 참고).
+
+이슈 #25의 실측 후보 표(1~5번)가 이걸로 전부 채워졌다 — 결론: **latency 개선은 커널 선택이나
+컴파일 강도 조절이 아니라, 워크로드 실제 크기에 맞게 서빙 용량(`max-num-seqs`)을 재설계해
+CUDA Graph를 켤 여유를 만드는 것에서만 나왔다.**
+
+---
+
 ## 아직 안 한 것 / 다음 단계
 
-- Experiment 3(decode-only CUDA graph 세부 튜닝) / 4(`--performance-mode interactivity`) /
-  5(`--optimization-level O3`) 추가 진행 여부 결정 — 이미 3.6배 개선을 확인했으므로 추가
-  레버의 한계효용을 판단한 뒤 진행할지 여기서 마무리할지 정한다
-- `results/model_selection/qwen_latency_diagnosis.md`에 이 결과 정식 반영(아직 안 함)
+- `results/model_selection/qwen_latency_diagnosis.md`에 이 문서 전체 결과를 정식 반영(아직 안 함)
+- **Experiment 3(decode-only CUDA graph 세부 튜닝, `-cc.cudagraph_mode=FULL_DECODE_ONLY` +
+  `--cudagraph-capture-sizes 1`)은 스킵하기로 결정.** 이 실험이 없애려는 건 prefill+decode
+  전환 구간의 PIECEWISE 그래프인데, prefill은 요청당 1회(전체 evidence+claim을 한 번에 처리)인
+  반면 decode는 요청당 70~200스텝 반복되어 latency의 대부분을 차지한다 — 손댈 수 있는 부분
+  자체가 이미 전체 시간의 극히 일부다. 게다가 같은 계열(CUDA graph/컴파일 세부 조정)인
+  interactivity·O3가 이미 둘 다 유의미한 차이가 없었다는 결과가 나왔어서, 3번도 같은 결과가
+  나올 가능성이 높다고 판단해 재기동 비용을 들이지 않기로 함.
