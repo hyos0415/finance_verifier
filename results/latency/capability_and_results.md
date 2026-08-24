@@ -11,6 +11,11 @@ OpenAI-compatible 서버, RTX 4070 Laptop 8GB + WSL2 + Docker).
 Baseline: `--enforce-eager --max-model-len 2048` (커밋된 표준 설정) 기준 decode
 **~12.4-13.1 tok/s**.
 
+> **설정 갱신(같은 세션 후반)**: 아래 "가능한 것" 절은 최초 CUDA graph 실험 당시의
+> `--max-num-seqs 1` 기준 서술이다. 이후 정확성 회귀 체크(아래 "정확성 회귀 체크" 절)와
+> `--max-num-seqs` 스윕·k6 부하테스트 결과를 반영해 **서빙 설정을 `--max-num-seqs 4`로
+> 최종 채택**했다 — 아래로 내려가서 "해석 및 권장값" 절과 "vLLM 멀티유저 서빙 검증" 절 참고.
+
 ---
 
 ## 가능한 것 (실제로 효과 있었던 레버)
@@ -118,12 +123,155 @@ GDN prefill 커널 선택이나 Mamba decode 커널 교체 같은 더 표적화�
 
 ---
 
+## 정확성 회귀 체크 — `--max-model-len 1024` 축소로 인한 잘림/품질 저하 여부
+
+Experiment 2가 `--max-model-len`을 2048→1024로 줄였기 때문에, Test(unseen) 53건 전체에 대해
+① 컨텍스트 예산이 실제로 부족한 claim이 있는지, ② 있다면/없다면 verdict 품질이 baseline과
+달라지는지를 순서대로 확인했다.
+
+### ① 토큰 예산 체크 — 잘림 위험 없음
+
+실제 Qwen tokenizer(`enable_thinking=False` chat template 적용)로 53건 전부의
+`system_prompt + "Evidence: ... Claim: ..."` prompt 토큰 수를 계산하고, `max_tokens=512`를
+항상 전부 소진한다고 가정한 최악의 경우로 `prompt_tokens + 512`가 1024를 넘는지 확인했다.
+
+- 최장 claim: `p012_c02`(spcl_cnd) — prompt 373 토큰, `373 + 512 = 885` (여유 139 토큰)
+- 53건 중 1024 초과 **0건**
+
+즉 `--max-model-len 1024`로 인한 프롬프트 잘림은 이 데이터셋에서는 발생하지 않는다.
+
+### ② 실제 53건 재실행 — baseline(2048, eager) vs Exp2(1024, cudagraph, seqs=1) 비교
+
+동일 53건을 Exp2 서버(재개된 컨테이너, `docker start vllm-server`)에 재실행하고
+baseline 결과(`results/eval/test_qwen_prompt-v6.json`, git에 커밋된 버전)와 claim 단위로 비교했다.
+
+| 지표 | baseline (2048, eager) | Exp2 (1024, cudagraph, seqs=1) |
+|---|---|---|
+| False Accept Rate | 0.1071 | **0.1071 (동일)** |
+| UNSUPPORTED Recall | 0.8846 | **0.8846 (동일)** |
+| Macro F1 | 0.8434 | 0.6151 |
+| Schema Valid Rate | 1.0 | 1.0 |
+| Latency p50/p95 | 9.08s/14.27s | 2.47s/3.89s |
+
+53건 중 **verdict가 다른 건 1건뿐**: `p024_c01`(gold=INSUFFICIENT, KDB 정기예금 — spcl_cnd 정보
+없음). baseline은 `INSUFFICIENT`(정답), Exp2는 `UNSUPPORTED`(오답)로 뒤집혔다. 두 응답의
+`reason` 텍스트는 "우대조건 정보가 존재하지 않는다"는 근거 인식까지는 거의 동일한 문장이고,
+마지막 결론 토큰만 갈렸다 — 즉 **컨텍스트 잘림(위 ①에서 배제됨)이 아니라, 이미 확정된 약점인
+INSUFFICIENT↔UNSUPPORTED 경계에서 eager vs CUDA-graph 실행 경로 간의 부동소수점 연산 차이가
+경계를 흔든 것**으로 해석한다. `temperature=0`이라 완전 동일 입력·완전 동일 가중치인데도 결과가
+달라졌다는 게 그 근거다.
+
+**핵심 지표(FAR·UNSUPPORTED Recall)는 이 flip에 영향받지 않았다** — 둘 다 INSUFFICIENT를
+직접 다루지 않는 지표이기 때문. Macro F1만 0.8434→0.6151로 크게 떨어졌는데, INSUFFICIENT
+클래스 표본이 원래 2건뿐이라 그중 1건이 뒤집히면 macro 평균이 과대하게 흔들리는 표본 크기
+문제로 본다(`test_eval_review.md`가 이미 "53건도 통계적 정밀도보다는 정성적 신호로 읽는다"고
+명시한 것과 같은 맥락).
+
+**결론**: latency 3.6배 개선은 정확성 트레이드오프 없이 얻은 게 맞지만(핵심 지표 불변),
+CUDA graph 활성화가 이미 알려진 경계 취약점의 출력 안정성에 미세한 흔들림을 준다는 신호는
+있다. 표본이 1건뿐이라 확정적 결론은 아니고, 최종 리포트(#15)에서 "known limitation" 항목에
+이 관찰을 짧게 덧붙일 가치가 있다. (전체 재실행 결과 JSON은 위 표로 이미 요약됐으므로 git에
+별도로 남기지 않았다 — baseline 파일 `results/eval/test_qwen_prompt-v6.json`만 유지)
+
+---
+
+## `--max-num-seqs` 스윕 — 동시 처리량 확장성
+
+`max-num-seqs`를 1(현재 채택 설정)에서 2/4/8로 올렸을 때 동시 요청 처리량이 어떻게 늘어나는지
+확인했다. 매 설정마다 컨테이너를 재기동하고(`--max-model-len 1024` 고정), 정확히
+`max-num-seqs`와 같은 수의 동시 요청을 `ThreadPoolExecutor`로 보내 총 벽시계 시간과
+`usage.completion_tokens` 합으로 aggregate tok/s를 측정했다.
+
+각 요청은 `ThreadPoolExecutor(max_workers=N)`로 **동시에** 발사됐다 — 순차 호출이 아니라
+실제로 여러 개의 서로 다른 claim이 vLLM의 continuous batching에 의해 한 batch로 묶여 GPU에서
+같이 decode된다는 뜻이다(로그에서도 `Capturing CUDA graphs ... [1, 2, 4]`처럼 capture size가
+동시 처리 개수에 맞춰 잡히는 걸 확인).
+
+| max-num-seqs | 동시 요청 수 | 총 처리시간 | aggregate tok/s | 평균 latency | 최대 latency | 처리량 배수(1 대비) | idle VRAM | peak VRAM |
+|---|---|---|---|---|---|---|---|---|
+| 1 | 1 | - | 45.18 | 2.78s | - | 1.0x | 5353 MiB | 5373 MiB |
+| 2 | 2 | 3.81s | 60.60 | 2.90s | 3.81s | 1.34x | 5357 MiB | 5377 MiB |
+| 4 | 4 | 4.44s | 107.92 | 3.56s | 4.43s | 2.39x | 5399 MiB | 5567 MiB |
+| 8 | 8 | 4.99s | 176.10 | 3.86s | 4.98s | 3.90x | 5365 MiB | 5783 MiB |
+
+(각 설정은 컨테이너를 완전히 재기동해 독립 측정, `nvidia-smi --query-gpu=memory.used`로
+부하 중 0.3초 간격 폴링한 최댓값이 "peak VRAM")
+
+**전체 처리량(aggregate tok/s)은 seqs를 늘릴수록 계속 개선된다** — 여러 claim을 동시에
+넣으면 GPU가 한 번에 더 많은 토큰을 생성하므로 "여러 문서(claim)를 한 배치로 처리"하는 게
+맞고, 총 처리 속도도 실제로 좋아진다. 다만 **선형은 아니다** — 8배 동시 요청에 처리량은
+3.9배만 늘고, 개별 요청의 latency가 늘어난다(평균 2.78s→3.86s, 최대 4.98s). GPU가 batch로
+여러 decode step을 묶어 처리하다 보니 한 요청이 다른 요청들의 처리를 일부 기다리는 형태로
+보인다.
+
+**GPU 피크는 완만하게만 늘어난다** — idle 상태는 seqs 값과 무관하게 ~5.35-5.4GB로 거의
+동일한데(이건 `--gpu-memory-utilization 0.85` 기준으로 KV cache 예약량이 시동 시 고정되기
+때문), 부하 중 peak는 seqs=1→8 사이에 5373→5783 MiB로 **약 410MB만 증가**한다. WSL2 환경의
+실사용 가능 VRAM 한도(~6.89GB, CLAUDE.md 기록)까지는 seqs=8에서도 여전히 1GB 이상 여유가
+있어, 이 범위에서는 OOM 걱정 없이 seqs를 더 올릴 수 있는 헤드룸이 남아있다.
+
+**해석 및 권장값**: 하나의 답변이 여러 개의 독립적인 atomic claim으로 쪼개지는 구조(CLAUDE.md)
+에서, 실제 Test셋의 답변당 claim 수는 평균 1.89개(최대 2개), Smoke셋(복잡한 조건이 몰린
+케이스)은 평균 5.82개(최대 11개)였다. 이를 고려하면:
+
+- **`max-num-seqs=4`**가 균형점으로 보인다 — 답변 대부분(2개 claim)을 한 배치로 다 처리하고도
+  여유가 있고, latency 증가(2.78s→3.56s, +28%)가 크지 않으면서 처리량은 2.4배 늘어난다. VRAM도
+  +200MB 수준으로 저렴하다.
+- `seqs=8`은 흔치 않은 다중 조건 답변(스모크셋의 5~11개 claim 케이스)까지 한 배치로 처리할 수
+  있지만, 추가 처리량 이득(2.4x→3.9x)에 비해 개별 latency 증가(최대 4.98s)가 더 커서 "일반적인
+  경우"엔 과한 설정일 수 있다.
+
+**→ 최종 채택: `--max-num-seqs=4`.** `seqs=1`(순수 batch=1 실행)에서 전환한다. CLAUDE.md가
+정의한 핵심 latency 지표(p50/p95, batch=1 기준)는 이 전환과 별개로 유지된다 — 그 지표는
+"GPU가 완전히 유휴 상태에서 claim 1건을 처리하는 데 걸리는 시간"을 재는 정의이고, `seqs=4`는
+"여러 claim/여러 사용자가 동시에 몰릴 때 서버가 어떻게 동작하는가"를 다루는 서빙 계층의 별개
+설정이다. 두 숫자를 혼동하지 않게 #15 최종 리포트에서 구분해서 기술한다. `scripts/run_vllm_container.sh`
+의 기본값도 이 설정으로 갱신했다.
+
+---
+
+## vLLM 멀티유저 서빙 검증 — k6 부하테스트
+
+`max-num-seqs=4`를 최종 채택 설정으로 가져가기로 하면서(위 스윕에서의 균형점), vLLM의 핵심
+장점인 "여러 사용자가 동시에 하나의 서빙 인스턴스를 쓸 수 있다"는 걸 실제로 검증했다.
+`max-num-seqs`(GPU가 한 번에 처리하는 배치 크기 상한)와 k6의 VU(동시에 요청을 보내는
+클라이언트 수)는 다른 개념이라, VU를 서버 용량(4)과 같게/2배(8)/4배(16)로 걸어 오버구독
+상황에서 서버가 어떻게 반응하는지 확인했다.
+
+`src/verifier/client.py`와 동일한 payload(system prompt, `chat_template_kwargs.enable_thinking:
+false`, `temperature=0`, `max_tokens=512`, JSON schema response_format)로 k6 스크립트를
+작성하고, `data/test/claim_dataset.json`의 실제 53개 claim을 순환시켜 각 VU 레벨마다 고정된
+총 요청 수(`shared-iterations` executor)를 처리했다.
+
+| VU(동시 사용자) | 서버 용량(seqs=4) 대비 | 요청 수 | throughput | p50 | p90 | p95 | p99 | 에러율 |
+|---|---|---|---|---|---|---|---|---|
+| 1 | 0.25x | 24 | 0.367 req/s | 2.60s | 3.90s | 4.10s | 4.33s | 0% |
+| 4 | 1.0x | 24 | 1.184 req/s | 3.26s | 5.08s | 5.08s | 5.08s | 0% |
+| 8 | 2.0x | 32 | 1.239 req/s | 6.23s | 8.44s | 8.78s | 8.78s | 0% |
+| 16 | 4.0x | 48 | 1.251 req/s | 11.34s | 14.33s | 16.88s | 16.93s | 0% |
+
+**핵심 관찰**:
+- **throughput은 VU=4(서버 용량과 일치)에서 이미 거의 포화**(1.184 req/s)되고, VU를 8/16으로
+  늘려도 총 처리량은 거의 그대로다(1.24~1.25 req/s). GPU가 한 번에 처리 가능한 양은
+  `max-num-seqs`로 이미 캡이 걸려 있기 때문.
+- 초과 사용자(용량을 넘는 VU)는 거부되지 않고 **큐에서 대기하며, latency가 오버구독 비율에
+  거의 선형으로 늘어난다**(1x→2x→4x 오버구독에 p50이 3.26s→6.23s→11.34s로, 대략 그 비율만큼
+  증가).
+- **4배 오버구독(VU=16)에서도 에러/타임아웃 0건, schema valid 100%** — 서버가 죽거나 요청을
+  실패시키는 대신 늦게라도 전부 처리한다는 게 확인됐다.
+
+**해석**: 이게 vLLM continuous batching의 실질적 장점이다 — 순수 단일 요청 서빙(예: 별도
+동시성 제어 없는 naive Flask 서버)이었다면 서버가 GPU 메모리 부족으로 죽거나 요청을 거부할
+상황에서도, vLLM은 초과 요청을 큐잉해 latency만 우아하게 늘리며 전부 처리한다. 다만 이는
+"동시 사용자를 무한히 받아도 괜찮다"는 뜻은 아니고, `max-num-seqs=4`를 넘는 동시 사용자가
+지속적으로 발생하는 서비스라면 latency SLA를 위해 `max-num-seqs`를 더 올리거나(위 스윕 참고,
+VRAM 여유는 충분) 요청 큐 앞단에 별도 rate limiting/timeout 정책이 필요하다는 걸 시사한다.
+
+---
+
 ## 아직 안 한 것 / 다음 단계
 
-- Test(unseen) 53건 **전체**에 대해 이 설정으로 재실행 (지금은 앞 10건만 확인 — p50/p95는
-  아직 없음, 10건 평균만 있음)
-- `results/model_selection/qwen_latency_diagnosis.md`에 이 결과 정식 반영(위 정정 사항 포함)
 - Experiment 3(decode-only CUDA graph 세부 튜닝) / 4(`--performance-mode interactivity`) /
   5(`--optimization-level O3`) 추가 진행 여부 결정 — 이미 3.6배 개선을 확인했으므로 추가
   레버의 한계효용을 판단한 뒤 진행할지 여기서 마무리할지 정한다
-- git commit/push 전 확정 필요 (아직 커밋 없음)
+- `results/model_selection/qwen_latency_diagnosis.md`에 이 결과 정식 반영(아직 안 함)
