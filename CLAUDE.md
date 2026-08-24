@@ -104,6 +104,7 @@ Eval harness / Claim Decomposer / 데이터 수집 코드는 처음부터 컨테
 - 범위: **은행권 정기예금만** (적금·대출 등 이번 범위 제외).
 - API 제한: 일일 조회 10,000건, 기본 1회 조회 100건. Live service가 아니라 snapshot dataset 구축이므로 충분.
 - 첫 raw 데이터 확인 후 `baseList`/`optionList`를 상품 식별자 기준으로 join해 canonical record로 정규화한다. **raw 응답을 보기 전에 과도한 abstraction을 만들지 않는다.**
+- **`data/` 아래 상품 데이터셋 파일은 공개 리포에 올리지 않는다.** 인증키 발급을 전제로 제공되는 데이터를 공개 리포에 그대로 올리는 건 그 제공 방식을 우회하는 재배포에 가깝다. `data/raw`·`data/normalized`·`data/{smoke,pilot,dev,test}`는 `.gitignore`로 로컬 전용이며, 구조 확인용 마스킹 샘플(`data/sample/`, 합성 데이터)만 추적한다.
 
 ### API Key 보안 — 반드시 지킬 것
 
@@ -155,16 +156,18 @@ finance_verifier/
 ├── .env               # 실제 키 (git 추적 안 됨)
 ├── .env.example
 ├── data/
-│   ├── raw/           # API snapshot, 인증키 미포함
-│   ├── normalized/    # canonical product record
-│   ├── smoke/ pilot/ dev/ test/
+│   ├── sample/        # 마스킹 샘플만 git 추적 (합성 데이터)
+│   ├── raw/           # API snapshot (로컬 전용, .gitignore)
+│   ├── normalized/    # canonical product record (로컬 전용)
+│   ├── smoke/ pilot/ dev/ test/   # claim dataset (로컬 전용)
 ├── src/
 │   ├── ingest/        # fetch_finlife.py, normalize_products.py
 │   ├── decomposition/ # claim_decomposer.py
 │   ├── verifier/      # client.py, schemas.py
 │   └── eval/          # metrics.py, run_eval.py, failure_analysis.py
-├── prompts/
+├── prompts/           # 실제 사용한 프롬프트 전문 스냅샷 (SSOT는 Langfuse + 코드)
 │   ├── decomposer/
+│   ├── dataset/
 │   └── verifier/
 ├── scripts/
 │   ├── docker_gpu_smoke.sh

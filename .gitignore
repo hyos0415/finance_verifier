@@ -1,6 +1,18 @@
 # Secrets
 .env
 
+# Finlife 상품 데이터 (금융감독원 Open API 스냅샷 및 파생물)
+# 인증키로 접근이 관리되는 데이터라 공개 리포에 재배포하지 않는다.
+# 재현 방법은 data/sample/README.md 참고. 구조 확인용 마스킹 샘플은 data/sample/만 추적한다.
+data/raw/
+data/normalized/
+data/smoke/
+data/pilot/
+data/dev/
+data/test/
+!data/sample/
+
+
 # Personal notes (not project deliverables)
 notes/
 

@@ -1,0 +1,114 @@
+[
+  {
+    "claim_id": "s002_c01",
+    "product_id": "s002",
+    "source_field": "options_12m_base_rate",
+    "claim_text": "다라 다이렉트정기예금 12개월 옵션의 기본금리는 3.2%이다.",
+    "answer_text": "다라 다이렉트정기예금의 12개월 기본금리는 연 3.2%입니다.",
+    "evidence_text": "다라 다이렉트정기예금 12개월 옵션 — 기본금리(base_rate): 3.2%, 최고금리(max_rate): 3.5%",
+    "label": "SUPPORTED",
+    "error_type": null,
+    "reasoning_type": [
+      "numeric_threshold"
+    ],
+    "insufficient_source": null,
+    "needs_manual_review": false,
+    "atomicity_ok": true,
+    "coverage_ok": true,
+    "coverage_missing_numbers": [],
+    "dataset_split": "sample"
+  },
+  {
+    "claim_id": "s002_c02",
+    "product_id": "s002",
+    "source_field": "options_12m_base_rate",
+    "claim_text": "다라 다이렉트정기예금 12개월 옵션의 기본금리는 3.5%이다.",
+    "answer_text": "다라 다이렉트정기예금의 12개월 기본금리는 연 3.5%입니다.",
+    "evidence_text": "다라 다이렉트정기예금 12개월 옵션 — 기본금리(base_rate): 3.2%, 최고금리(max_rate): 3.5%",
+    "label": "UNSUPPORTED",
+    "error_type": "base_vs_max_rate",
+    "reasoning_type": [
+      "numeric_threshold"
+    ],
+    "insufficient_source": null,
+    "needs_manual_review": false,
+    "atomicity_ok": true,
+    "coverage_ok": true,
+    "coverage_missing_numbers": [],
+    "dataset_split": "sample"
+  },
+  {
+    "claim_id": "s003_c01",
+    "product_id": "s003",
+    "source_field": "spcl_cnd",
+    "claim_text": "마바 우대정기예금은 가입 후 3개월 안에 당행 주택청약 상품 보유 또는 당행 카드 결제 실적 보유 중 하나만 충족해도 연 0.25%p의 우대금리가 적용된다.",
+    "answer_text": "마바 우대정기예금은 가입 후 3개월 안에 당행 주택청약 상품을 보유하거나 카드 결제 실적을 보유하면, 둘 중 하나만 충족해도 연 0.25%p의 우대금리를 받을 수 있습니다.",
+    "evidence_text": "마바 우대정기예금 우대조건(spcl_cnd): * 최고우대금리 : 연 0.40%p\n- 가입 후 3개월 안에 다음 요건 중 1개 이상을 충족하면 : 연 0.25%p\n① 당행 주택청약 상품 보유\n② 당행 카드 결제 실적 보유\n- 마케팅 활용 동의 시 : 연 0.15%p",
+    "label": "SUPPORTED",
+    "error_type": null,
+    "reasoning_type": [
+      "any_of"
+    ],
+    "insufficient_source": null,
+    "needs_manual_review": false,
+    "atomicity_ok": true,
+    "coverage_ok": true,
+    "coverage_missing_numbers": [],
+    "dataset_split": "sample"
+  },
+  {
+    "claim_id": "s003_c02",
+    "product_id": "s003",
+    "source_field": "spcl_cnd",
+    "claim_text": "마바 우대정기예금은 가입 후 3개월 안에 당행 주택청약 상품 보유와 당행 카드 결제 실적 보유를 모두 충족해야 연 0.25%p의 우대금리가 적용된다.",
+    "answer_text": "마바 우대정기예금은 가입 후 3개월 안에 당행 주택청약 상품 보유와 신용(체크)카드 결제실적 보유를 모두 충족해야 연 0.25%p의 우대금리가 적용됩니다.",
+    "evidence_text": "마바 우대정기예금 우대조건(spcl_cnd): * 최고우대금리 : 연 0.40%p\n- 가입 후 3개월 안에 다음 요건 중 1개 이상을 충족하면 : 연 0.25%p\n① 당행 주택청약 상품 보유\n② 당행 카드 결제 실적 보유\n- 마케팅 활용 동의 시 : 연 0.15%p",
+    "label": "UNSUPPORTED",
+    "error_type": "condition_reversal",
+    "reasoning_type": [
+      "any_of"
+    ],
+    "insufficient_source": null,
+    "needs_manual_review": false,
+    "atomicity_ok": true,
+    "coverage_ok": true,
+    "coverage_missing_numbers": [],
+    "dataset_split": "sample"
+  },
+  {
+    "claim_id": "s004_c01",
+    "product_id": "s004",
+    "source_field": "spcl_cnd",
+    "claim_text": "사아 파트너정기예금은 당행 거래기간이 5년 이상인 고객에게 연 0.20%p의 우대금리를 제공한다.",
+    "answer_text": "사아 파트너정기예금은 당행 거래기간이 5년 이상인 고객에게 연 0.20%p의 우대금리를 제공합니다.",
+    "evidence_text": "사아 파트너정기예금 우대조건(spcl_cnd): - 당행 거래기간 5년 이상이면서 동시에 마케팅 활용에 동의한 경우 : 연 0.20%p\n- 급여이체 실적 6개월 이상인 경우 : 연 0.10%p\n(단, 중도해지 시 우대금리는 적용되지 않음)",
+    "label": "UNSUPPORTED",
+    "error_type": "condition_omission",
+    "reasoning_type": [
+      "all_of"
+    ],
+    "insufficient_source": null,
+    "needs_manual_review": false,
+    "atomicity_ok": true,
+    "coverage_ok": true,
+    "coverage_missing_numbers": [],
+    "dataset_split": "sample"
+  },
+  {
+    "claim_id": "s001_c01",
+    "product_id": "s001",
+    "source_field": "spcl_cnd",
+    "claim_text": "가나 스마트정기예금은 급여이체 실적이 있으면 연 0.20%p의 우대금리가 적용된다.",
+    "answer_text": "가나 스마트정기예금은 급여이체 실적이 있으면 연 0.20%p의 우대금리가 적용됩니다.",
+    "evidence_text": "가나 스마트정기예금 우대조건(spcl_cnd): 우대조건 정보 없음",
+    "label": "INSUFFICIENT",
+    "error_type": "missing_information",
+    "reasoning_type": [],
+    "insufficient_source": "natural_missing",
+    "needs_manual_review": false,
+    "atomicity_ok": true,
+    "coverage_ok": true,
+    "coverage_missing_numbers": [],
+    "dataset_split": "sample"
+  }
+]

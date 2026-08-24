@@ -1,0 +1,172 @@
+[
+  {
+    "product_id": "s001",
+    "fin_co_no": "9990001",
+    "fin_prdt_cd": "SAMPLE-A-01",
+    "bank_name": "가나은행",
+    "product_name": "가나 스마트정기예금",
+    "join_way": "인터넷,스마트폰",
+    "join_member": "실명의 개인",
+    "join_deny_code": "1",
+    "join_deny_label": "제한없음",
+    "max_limit": null,
+    "spcl_cnd": null,
+    "mtrt_int": "만기 후 경과기간별 적용\n- 1개월 이내: 만기 시점 약정이율의 40%\n- 1개월 초과 6개월 이내: 만기 시점 약정이율의 25%\n- 6개월 초과: 만기 시점 약정이율의 15%",
+    "etc_note": "- 가입기간: 1~36개월\n- 최소가입금액: 1만원 이상\n- 만기일을 일, 월 단위로 자유롭게 선택 가능",
+    "disclosure": {
+      "dcls_month": "209901",
+      "dcls_strt_day": "20990101",
+      "dcls_end_day": null,
+      "fin_co_subm_day": "209901011200"
+    },
+    "options": [
+      {
+        "save_trm_months": 1,
+        "base_rate": 2.0,
+        "max_rate": 2.0,
+        "rate_type": "단리"
+      },
+      {
+        "save_trm_months": 6,
+        "base_rate": 2.4,
+        "max_rate": 2.4,
+        "rate_type": "단리"
+      },
+      {
+        "save_trm_months": 12,
+        "base_rate": 2.8,
+        "max_rate": 2.8,
+        "rate_type": "단리"
+      },
+      {
+        "save_trm_months": 36,
+        "base_rate": 2.9,
+        "max_rate": 2.9,
+        "rate_type": "단리"
+      }
+    ]
+  },
+  {
+    "product_id": "s002",
+    "fin_co_no": "9990002",
+    "fin_prdt_cd": "SAMPLE-B-01",
+    "bank_name": "다라은행",
+    "product_name": "다라 다이렉트정기예금",
+    "join_way": "인터넷,스마트폰,영업점",
+    "join_member": "개인(개인사업자 포함)",
+    "join_deny_code": "1",
+    "join_deny_label": "제한없음",
+    "max_limit": 1000000000,
+    "spcl_cnd": "1. 당행과 처음 거래하는 고객에게 보너스이율 0.10% 제공\n2. 아래 요건을 모두 채우면 보너스이율 제공\n- 가입기간 12개월 이상\n- 가입금액 1천만원 이상\n(보너스이율 0.20% / 미충족 시 미제공)",
+    "mtrt_int": "만기 후 경과기간별 적용\n- 3개월 이내: 약정이율의 45%\n- 3개월 초과: 약정이율의 15%",
+    "etc_note": "비대면 채널 전용 상품 (인터넷·모바일 앱)",
+    "disclosure": {
+      "dcls_month": "209901",
+      "dcls_strt_day": "20990101",
+      "dcls_end_day": "99991231",
+      "fin_co_subm_day": "209901011200"
+    },
+    "options": [
+      {
+        "save_trm_months": 1,
+        "base_rate": 2.1,
+        "max_rate": 2.2,
+        "rate_type": "단리"
+      },
+      {
+        "save_trm_months": 3,
+        "base_rate": 2.5,
+        "max_rate": 2.7,
+        "rate_type": "단리"
+      },
+      {
+        "save_trm_months": 6,
+        "base_rate": 2.9,
+        "max_rate": 3.1,
+        "rate_type": "단리"
+      },
+      {
+        "save_trm_months": 12,
+        "base_rate": 3.2,
+        "max_rate": 3.5,
+        "rate_type": "단리"
+      }
+    ]
+  },
+  {
+    "product_id": "s003",
+    "fin_co_no": "9990003",
+    "fin_prdt_cd": "SAMPLE-C-01",
+    "bank_name": "마바은행",
+    "product_name": "마바 우대정기예금",
+    "join_way": "스마트폰",
+    "join_member": "실명의 개인",
+    "join_deny_code": "1",
+    "join_deny_label": "제한없음",
+    "max_limit": 300000000,
+    "spcl_cnd": "* 최고우대금리 : 연 0.40%p\n- 가입 후 3개월 안에 다음 요건 중 1개 이상을 충족하면 : 연 0.25%p\n① 당행 주택청약 상품 보유\n② 당행 카드 결제 실적 보유\n- 마케팅 활용 동의 시 : 연 0.15%p",
+    "mtrt_int": "만기 후 경과기간별 적용\n- 1개월 이내: 약정이율의 45%\n- 1개월 초과: 약정이율의 25%",
+    "etc_note": "- 최소가입금액: 100만원 이상\n- 1인 1계좌",
+    "disclosure": {
+      "dcls_month": "209901",
+      "dcls_strt_day": "20990101",
+      "dcls_end_day": null,
+      "fin_co_subm_day": "209901011200"
+    },
+    "options": [
+      {
+        "save_trm_months": 6,
+        "base_rate": 2.6,
+        "max_rate": 3.0,
+        "rate_type": "단리"
+      },
+      {
+        "save_trm_months": 12,
+        "base_rate": 3.0,
+        "max_rate": 3.4,
+        "rate_type": "단리"
+      }
+    ]
+  },
+  {
+    "product_id": "s004",
+    "fin_co_no": "9990004",
+    "fin_prdt_cd": "SAMPLE-D-01",
+    "bank_name": "사아은행",
+    "product_name": "사아 파트너정기예금",
+    "join_way": "영업점",
+    "join_member": "실명의 개인",
+    "join_deny_code": "1",
+    "join_deny_label": "제한없음",
+    "max_limit": null,
+    "spcl_cnd": "- 당행 거래기간 5년 이상이면서 동시에 마케팅 활용에 동의한 경우 : 연 0.20%p\n- 급여이체 실적 6개월 이상인 경우 : 연 0.10%p\n(단, 중도해지 시 우대금리는 적용되지 않음)",
+    "mtrt_int": "만기 후 경과기간별 적용\n- 6개월 이내: 약정이율의 35%\n- 6개월 초과: 약정이율의 15%",
+    "etc_note": "- 가입기간: 3~24개월\n- 만기 자동재예치 가능",
+    "disclosure": {
+      "dcls_month": "209901",
+      "dcls_strt_day": "20990101",
+      "dcls_end_day": null,
+      "fin_co_subm_day": "209901011200"
+    },
+    "options": [
+      {
+        "save_trm_months": 3,
+        "base_rate": 2.3,
+        "max_rate": 2.6,
+        "rate_type": "단리"
+      },
+      {
+        "save_trm_months": 12,
+        "base_rate": 2.9,
+        "max_rate": 3.2,
+        "rate_type": "단리"
+      },
+      {
+        "save_trm_months": 24,
+        "base_rate": 3.0,
+        "max_rate": 3.3,
+        "rate_type": "단리"
+      }
+    ]
+  }
+]
