@@ -2,7 +2,7 @@
 .env
 
 # Finlife 상품 데이터 (금융감독원 Open API 스냅샷 및 파생물)
-# 인증키로 접근이 관리되는 데이터라 공개 리포에 재배포하지 않는다.
+# 인증키로 접근이 관리되는 데이터라 공개 repo에 재배포하지 않는다.
 # 재현 방법은 data/sample/README.md 참고. 구조 확인용 마스킹 샘플은 data/sample/만 추적한다.
 data/raw/
 data/normalized/
@@ -12,6 +12,11 @@ data/dev/
 data/test/
 !data/sample/
 
+
+# eval 실행 로그 — reason/raw_content에 공시 원문이 그대로 인용돼 로컬 전용.
+# 텍스트를 제거한 통합 요약본(results/eval/runs_summary.json)만 추적한다.
+results/eval/raw/
+results/eval/audit/
 
 # Personal notes (not project deliverables)
 notes/

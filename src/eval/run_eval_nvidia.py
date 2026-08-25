@@ -20,7 +20,8 @@ from openai import OpenAI
 from pydantic import ValidationError
 
 from src.eval.metrics import EvalRecord, compute_all
-from src.verifier.client import SYSTEM_PROMPT
+from src.verifier.client import PROMPT_NAME, SYSTEM_PROMPT
+from src.verifier.langfuse_client import get_or_create_prompt
 from src.verifier.schemas import VERIFIER_JSON_SCHEMA, VerifierOutput
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -82,14 +83,14 @@ def prediction_to_eval_record(pred: dict) -> EvalRecord:
     )
 
 
-def verify_nvidia(evidence: str, claim: str, model_name: str):
+def verify_nvidia(evidence: str, claim: str, model_name: str, system_text: str = SYSTEM_PROMPT):
     client = get_client()
     user = f"Evidence: {evidence}\n\nClaim: {claim}"
     t0 = time.perf_counter()
     response = client.chat.completions.create(
         model=model_name,
         messages=[
-            {"role": "system", "content": SYSTEM_PROMPT},
+            {"role": "system", "content": system_text},
             {"role": "user", "content": user},
         ],
         temperature=0,
@@ -106,13 +107,17 @@ def verify_nvidia(evidence: str, claim: str, model_name: str):
         return False, None, raw_content, str(e), latency
 
 
-def run(model_key: str, split: str) -> dict:
+def run(model_key: str, split: str, prompt_label: str = "production") -> dict:
     model_name = MODEL_NAMES[model_key]
+    # run_eval과 동일하게 Langfuse 라벨로 프롬프트를 지목한다 (production 이동 없이 변형 A/B).
+    prompt_obj = get_or_create_prompt(PROMPT_NAME, SYSTEM_PROMPT, label=prompt_label)
+    system_text = prompt_obj.prompt if prompt_obj else SYSTEM_PROMPT
+    prompt_version = prompt_obj.version if prompt_obj else 2
     claims = load_claims(split)
     if not claims:
         raise ValueError(f"no claims found for split={split!r} in data/{split}/claim_dataset.json")
 
-    out_path = RESULTS_DIR / f"{split}_nvidia-{model_key}_prompt-v2.json"
+    out_path = RESULTS_DIR / f"{split}_nvidia-{model_key}_prompt-v{prompt_version}.json"
     predictions = load_checkpoint(out_path)
     done_ids = {p["claim_id"] for p in predictions}
     remaining = [c for c in claims if c["claim_id"] not in done_ids]
@@ -122,12 +127,12 @@ def run(model_key: str, split: str) -> dict:
 
     if remaining:
         print(f"[{model_key}/{split}] warm-up call (excluded from latency)...")
-        verify_nvidia(WARMUP_EVIDENCE, WARMUP_CLAIM, model_name)
+        verify_nvidia(WARMUP_EVIDENCE, WARMUP_CLAIM, model_name, system_text)
 
     for claim in remaining:
         try:
             schema_valid, output, raw_content, error, latency = verify_nvidia(
-                claim["evidence_text"], claim["claim_text"], model_name
+                claim["evidence_text"], claim["claim_text"], model_name, system_text
             )
         except Exception as e:
             print(f"[run_eval_nvidia] ERROR on {claim['claim_id']}: {e} -- stopping, {len(predictions)} results saved")
@@ -161,8 +166,9 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("model_key", choices=list(MODEL_NAMES))
     parser.add_argument("--split", default="smoke")
+    parser.add_argument("--prompt-label", default="production")
     args = parser.parse_args()
-    run(args.model_key, args.split)
+    run(args.model_key, args.split, args.prompt_label)
 
 
 if __name__ == "__main__":

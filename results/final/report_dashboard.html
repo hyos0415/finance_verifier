@@ -709,7 +709,7 @@
       <p class="note" style="margin-bottom:8px">
         위 e-그린세이브예금 사례처럼, 조건 A·B를 모두 만족해야 하는데 답변이 A만
         언급하면, 그것만 보고 "맞다"고 승인하는 경향이 있었다. <b>모델을 훨씬
-        키워도(130배 큰 모델) 똑같이 놓쳤다</b> — 크기로 저절로 해결되는 문제가 아니다.
+        키워도(130배 큰 모델) 똑같이 놓쳤다.</b>
       </p>
       <div class="status-grid">
         <span class="status-chip"><span class="status-dot miss"></span>Qwen 3.5-4B — 0 / 2</span>
@@ -721,7 +721,51 @@
 
   <section>
     <div class="section-head">
-      <div><span class="section-num">07</span><h2>예상 밖의 발견 — 더 작은 모델인데 더 느렸다</h2></div>
+      <div><span class="section-num">07</span><h2>끝내고 나서 스스로 다시 검증했다</h2></div>
+    </div>
+    <p class="lede">
+      프로젝트를 마친 뒤, 평가 방식 자체에 허점이 없는지 점검하는 도구를 만들어 이 프로젝트에
+      다시 적용하고, 같은 실험을 모델 4개에 다시 돌렸다. <b>거기서 위 두 한계에 대한 판단이 모두
+      바뀌었다.</b>
+    </p>
+    <div class="cmp-grid">
+      <div class="cmp-card chosen">
+        <div class="cmp-head">
+          <div><div class="cmp-title">채택한 방식</div><div class="cmp-sub">지금의 검증 지침</div></div>
+        </div>
+        <ul class="cmp-list">
+          <li>위험한 답변을 놓친 비율 <b>11.1%</b></li>
+          <li>정상 답변을 통과시킨 비율 <b>91.3%</b></li>
+        </ul>
+      </div>
+      <div class="cmp-card flaw">
+        <div class="cmp-head">
+          <div><div class="cmp-title">더 엄격한 방식</div><div class="cmp-sub">조건을 하나씩 세어 대조하도록 지시</div></div>
+          <span class="verdict-badge flaw">기각</span>
+        </div>
+        <ul class="cmp-list">
+          <li>위험한 답변을 놓친 비율 <b>11.1% → 5.6%</b></li>
+          <li class="missing">정상 답변을 통과시킨 비율 <b>91.3% → 67.4%</b></li>
+        </ul>
+      </div>
+    </div>
+    <p class="note" style="margin-top:10px">
+      <b>한계 2 — 원인이 달랐다.</b> "조건이 빠진 걸 못 본다"가 아니라, 여러 조건이 <b>"전부 필요"한지
+      "하나만 충족하면 되는지"를 구분하지 못하는 것</b>이 핵심 병목이었다. 그래서 엄격하게
+      검사시키면 하나만 충족해도 되는 조건까지 "빠졌다"고 보고 정상 답변을 거부한다. 실제로 더 큰
+      모델(조건 관계를 구분할 수 있는)에서는 같은 지침이 오히려 성능을 올렸다.
+    </p>
+    <p class="note">
+      <b>한계 1 — 태스크 문제가 아니었다.</b> "정보 없음"을 구분하는 능력은 모델 크기 순서를 따르지
+      않았다. 탈락시켰던 <b>3B 모델은 이 항목을 전부 맞혔고</b>, 550B 모델은 하나도 못 맞혔다.
+      즉 태스크가 어려운 게 아니라 <b>고른 모델의 특성</b>이었다.
+    </p>
+    <p class="finding">→ 안전하기만 하고 정상 답변을 막는 검증기는 쓸 수 없다. 이 지침은 채택하지 않았다.</p>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <div><span class="section-num">08</span><h2>예상 밖의 발견 — 더 작은 모델인데 더 느렸다</h2></div>
     </div>
     <p class="lede">
       가볍게 압축한 버전이라 당연히 더 빠를 거라 예상했는데, 실측해보니 오히려 더
@@ -752,18 +796,18 @@
 
   <section>
     <div class="section-head">
-      <div><span class="section-num">08</span><h2>다음 질문</h2></div>
+      <div><span class="section-num">09</span><h2>다음 질문</h2></div>
     </div>
     <div class="next-grid">
       <div class="next-card">
         <span class="q">Q1</span>
-        <p>작은 AI가 "잘하는 것"과, 검증 구조 자체가 "잘하는 것"을 나눌 수 있을까?
-        "언급 안 된 조건 찾기"는 자연어 이해만으로는 계속 어려울 수 있다.</p>
+        <p>이번 검증으로 병목이 "누락 찾기"가 아니라 <b>"조건들이 전부 필요한지, 하나만
+        충족하면 되는지 구분하기"</b>로 좁혀졌다. 이건 자연어 이해만으로는 계속 어려울 수 있다.</p>
       </div>
       <div class="next-card">
         <span class="q">Q2</span>
-        <p>조건 목록을 구조적으로 비교하는 별도 체크를, 자연어 검증과 함께 쓰는
-        방식(hybrid 검증)이 다음 실험 후보다.</p>
+        <p>그렇다면 우대조건의 "전부 필요 / 하나만 충족"을 <b>미리 구조로 정리해서</b> 넘겨주면,
+        정상 답변을 거부하지 않으면서도 누락을 잡을 수 있을까? 이게 다음 실험 후보다.</p>
       </div>
       <div class="next-card">
         <span class="q">Q3</span>
@@ -775,7 +819,7 @@
 
   <section>
     <div class="section-head">
-      <div><span class="section-num">09</span><h2>숫자만으로는 안 되는 것</h2></div>
+      <div><span class="section-num">10</span><h2>숫자만으로는 안 되는 것</h2></div>
     </div>
     <div class="seal-band">
       <div class="seal-mark">참고<br>자료<br>ONLY</div>

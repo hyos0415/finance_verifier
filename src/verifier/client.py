@@ -80,9 +80,17 @@ def _flatten_metadata(metadata: Optional[dict]) -> dict:
     return flat
 
 
-def verify(evidence: str, claim: str, model_key: str, metadata: Optional[dict] = None) -> VerifierResult:
+def verify(
+    evidence: str,
+    claim: str,
+    model_key: str,
+    metadata: Optional[dict] = None,
+    prompt_label: str = "production",
+) -> VerifierResult:
+    """prompt_label로 Langfuse의 다른 라벨(예: "experiment")을 지목하면, production을
+    건드리지 않고 프롬프트 변형을 같은 harness로 A/B 할 수 있다."""
     config = MODEL_CONFIGS[model_key]
-    prompt_obj = get_or_create_prompt(PROMPT_NAME, SYSTEM_PROMPT)
+    prompt_obj = get_or_create_prompt(PROMPT_NAME, SYSTEM_PROMPT, label=prompt_label)
     system_text = prompt_obj.prompt if prompt_obj else SYSTEM_PROMPT
 
     payload = {

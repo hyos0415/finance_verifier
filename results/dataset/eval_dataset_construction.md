@@ -7,7 +7,7 @@
 한 줄로 요약하면: **금융상품 공시를 근거(evidence)로 삼아, 실제로 일어날 법한 오류 유형을
 분류 체계로 정의하고, 그 오류를 의도적으로 주입한 답변을 만들어 atomic claim 단위로 3분류
 정답(gold label)을 붙인 도메인 특화 평가셋**이다. 모델 선정용 Pilot 64건과 한 번도 안 쓴
-unseen Test 53건을 분리해 회귀 평가가 가능한 형태로 남겼다.
+선정에 쓰지 않은 held-out Test 53건을 분리해 회귀 평가가 가능한 형태로 남겼다.
 
 이건 데이터 전처리가 아니라 벤치마크 구축에 가깝다. 전처리는 이미 있는 데이터를 쓸 수 있게
 다듬는 일이지만, 여기서는 **판별 대상(오류 유형)과 정답 기준(3분류 경계)을 먼저 정의하고 그에
@@ -122,7 +122,7 @@ INSUFFICIENT는 출처를 따로 구분했다 — `natural_missing`(공시 자�
 교훈은 단순하다 — **모델이 틀린 문항은 먼저 데이터를 의심한다.** 이 검수를 안 했으면 데이터
 결함 3건이 그대로 "모델 성능"으로 보고됐을 것이다.
 
-## 6. Split 설계 — Pilot / Test 분리
+## 6. Split 설계 — Pilot / held-out Test 분리
 
 | | Pilot | Test |
 |---|---|---|
@@ -139,7 +139,7 @@ INSUFFICIENT는 출처를 따로 구분했다 — `natural_missing`(공시 자�
   쓴 상품은 Test에서 만기후이자(`mtrt_int`)를 쓴다. 근거 텍스트 기준으로는 겹치는 문항이 없다.
   나머지 23개 상품은 Test에서 처음 등장한다.
 - **저자를 분리했다.** Test 시나리오 53건 중 25건은 다른 에이전트(Codex)가 작성했다. 한 사람이
-  Pilot과 Test를 다 쓰면 같은 문체·같은 함정 패턴이 반복돼 "unseen"의 의미가 약해지기 때문이다.
+  Pilot과 Test를 다 쓰면 같은 문체·같은 함정 패턴이 반복돼 held-out의 의미가 약해지기 때문이다.
 
 Test는 Pilot에서 모델·프롬프트를 확정한 **뒤에** 한 번만 실행했다.
 
@@ -212,6 +212,9 @@ Verifier가 잘 맞히는 쪽이라 변별력이 낮다.
   문구가 달라져 재검증이 필요하다.
 - **필요조건/충분조건 같은 논리적 뉘앙스**는 키워드 규칙으로 못 잡는다. 이번엔 self-containment
   수정으로 해당 케이스가 해소됐지만 일반적인 해법은 아니다.
+- **Test 셋은 더 이상 held-out이 아니다.** [#28 감사](../eval/precondition_audit.md)의 검증 실험에서
+  Test 53건을 프롬프트 변형 3종에 사용했다. 리포트에 보고된 수치는 노출 이전 측정값이라 유효하지만,
+  앞으로 프롬프트를 더 손보려면 새 셋이 필요하다.
 - **Dev split을 따로 두지 않았다.** 프롬프트 개선을 Pilot에서 했기 때문에 Pilot 지표는 선정
   과정에서 반복 사용된 값이다. Test는 그 영향에서 자유롭다.
 
@@ -240,4 +243,5 @@ python -m src.decomposition.build_test_claims            # Test split 구축
 | [`../normalization/canonical_products_review.md`](../normalization/canonical_products_review.md) | evidence로 쓸 canonical record 정규화 규칙 |
 | [`../decomposition/claim_decomposer_smoke_review.md`](../decomposition/claim_decomposer_smoke_review.md) | Claim Decomposition 검증, self-containment 수정 경위 |
 | [`../eval/smoke_eval_review.md`](../eval/smoke_eval_review.md) | Pilot 분석 — 모델 선정, 프롬프트 기각 판정 |
-| [`../eval/test_eval_review.md`](../eval/test_eval_review.md) | Test(unseen) 최종 검증, cross-model 확인 |
+| [`../eval/test_eval_review.md`](../eval/test_eval_review.md) | Test(held-out) 최종 검증, cross-model 확인 |
+| [`../eval/precondition_audit.md`](../eval/precondition_audit.md) | eval 전제 감사 + 검증 실험(#28) |
