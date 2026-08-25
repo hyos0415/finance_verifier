@@ -21,7 +21,8 @@ from pydantic import ValidationError
 
 from src.decomposition.anthropic_client import call_json_schema
 from src.eval.metrics import EvalRecord, compute_all
-from src.verifier.client import SYSTEM_PROMPT
+from src.verifier.client import PROMPT_NAME, SYSTEM_PROMPT
+from src.verifier.langfuse_client import get_or_create_prompt
 from src.verifier.schemas import VERIFIER_JSON_SCHEMA, VerifierOutput
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -69,14 +70,20 @@ def prediction_to_eval_record(pred: dict) -> EvalRecord:
     )
 
 
-def verify_claude(evidence: str, claim: str, model_name: str):
+def verify_claude(evidence: str, claim: str, model_name: str, system_text: str = SYSTEM_PROMPT):
     user = f"Evidence: {evidence}\n\nClaim: {claim}"
     t0 = time.perf_counter()
     # temperature is deprecated/rejected for claude-sonnet-5 and claude-haiku-4-5 --
     # omit it and rely on each model's fixed default instead.
-    raw_dict = call_json_schema(
-        system=SYSTEM_PROMPT, user=user, schema=VERIFIER_JSON_SCHEMA, max_tokens=512, model=model_name
-    )
+    try:
+        raw_dict = call_json_schema(
+            system=system_text, user=user, schema=VERIFIER_JSON_SCHEMA, max_tokens=512, model=model_name
+        )
+    except (json.JSONDecodeError, StopIteration) as e:
+        # 출력이 max_tokens에서 잘려 JSON이 깨지거나 text 블록이 아예 없는 경우. API 장애가 아니라
+        # 모델의 스키마 준수 실패이므로 예외로 죽지 말고 schema_valid=False로 집계한다
+        # (그게 Schema Valid Rate 지표의 정의다).
+        return False, None, "", f"{type(e).__name__}: {e}", time.perf_counter() - t0
     latency = time.perf_counter() - t0
     raw_content = json.dumps(raw_dict, ensure_ascii=False)
     try:
@@ -86,13 +93,17 @@ def verify_claude(evidence: str, claim: str, model_name: str):
         return False, None, raw_content, str(e), latency
 
 
-def run(model_key: str, split: str) -> dict:
+def run(model_key: str, split: str, prompt_label: str = "production") -> dict:
     model_name = MODEL_NAMES[model_key]
+    # run_eval과 동일하게 Langfuse 라벨로 프롬프트를 지목한다 (production을 이동시키지 않고 변형 A/B).
+    prompt_obj = get_or_create_prompt(PROMPT_NAME, SYSTEM_PROMPT, label=prompt_label)
+    system_text = prompt_obj.prompt if prompt_obj else SYSTEM_PROMPT
+    prompt_version = prompt_obj.version if prompt_obj else 2
     claims = load_claims(split)
     if not claims:
         raise ValueError(f"no claims found for split={split!r} in data/{split}/claim_dataset.json")
 
-    out_path = RESULTS_DIR / f"{split}_claude-{model_key}_prompt-v2.json"
+    out_path = RESULTS_DIR / f"{split}_claude-{model_key}_prompt-v{prompt_version}.json"
     predictions = load_checkpoint(out_path)
     done_ids = {p["claim_id"] for p in predictions}
     remaining = [c for c in claims if c["claim_id"] not in done_ids]
@@ -102,12 +113,12 @@ def run(model_key: str, split: str) -> dict:
 
     if remaining:
         print(f"[{model_key}/{split}] warm-up call (excluded from latency)...")
-        verify_claude(WARMUP_EVIDENCE, WARMUP_CLAIM, model_name)
+        verify_claude(WARMUP_EVIDENCE, WARMUP_CLAIM, model_name, system_text)
 
     for claim in remaining:
         try:
             schema_valid, output, raw_content, error, latency = verify_claude(
-                claim["evidence_text"], claim["claim_text"], model_name
+                claim["evidence_text"], claim["claim_text"], model_name, system_text
             )
         except Exception as e:
             print(f"[run_eval_claude] ERROR on {claim['claim_id']}: {e} -- stopping, {len(predictions)} results saved")
@@ -141,8 +152,10 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("model_key", choices=["sonnet", "haiku"])
     parser.add_argument("--split", default="smoke")
+    parser.add_argument("--prompt-label", default="production",
+                        help='Langfuse prompt label (예: "experiment2"로 절차형 프롬프트 대조)')
     args = parser.parse_args()
-    run(args.model_key, args.split)
+    run(args.model_key, args.split, args.prompt_label)
 
 
 if __name__ == "__main__":

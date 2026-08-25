@@ -73,7 +73,7 @@ WSL2 + Docker Desktop(WSL2 backend) + `vllm/vllm-openai` 공식 이미지 → Op
   → 오류 주입 시나리오 설계 → synthetic 답변 생성
   → Claim Decomposition → self-containment 검토
   → gold label 확정 → 사람 검수
-  → Pilot / unseen Test 분리 (Test는 튜닝에 미사용)
+  → Pilot / held-out Test 분리 (선정 단계에 미사용)
 ```
 
 ### 2.1 원천 데이터와 정규화
@@ -133,13 +133,13 @@ Pilot 64건·Test 53건 모두 0건이다.
 
 교훈은 단순하다 — **모델이 틀린 문항은 먼저 데이터를 의심한다.**
 
-### 2.4 Pilot / unseen Test 분리와 leakage 방지
+### 2.4 Pilot / held-out Test 분리와 leakage 방지
 
 | split | 용도 | claim 수 | 시나리오 | 상품 | 저자 |
 |---|---|---|---|---|---|
 | Smoke | 파이프라인 1바퀴 확인 (모델 우열 판단 X) | 10 answers → 29 claims | – | – | Claude Code |
 | **Pilot** (저장 위치: `data/smoke/claim_dataset.json`) | 모델·프롬프트 선정 | **64** | 23 | 11 | Claude Code |
-| **Test (unseen)** | 최종 성능 확인 (한 번만 실행) | **53** | 53 | 28 | Claude Code 28 + Codex 25 |
+| **Test (held-out)** | 최종 성능 확인 (선정 후 최초 1회 실행) | **53** | 53 | 28 | Claude Code 28 + Codex 25 |
 
 leakage를 막기 위한 장치가 두 가지다.
 
@@ -147,7 +147,7 @@ leakage를 막기 위한 장치가 두 가지다.
   하나도 겹치지 않는다 — Pilot에서 우대조건을 쓴 상품은 Test에서 만기후이자를 쓰는 식이다.
   근거 텍스트 기준으로 중복 문항이 없고, 나머지 23개 상품은 Test에서 처음 등장한다.
 - **저자를 분리했다.** Test 53건 중 25건은 다른 에이전트(Codex)가 작성했다. 한 사람이 양쪽을
-  다 쓰면 같은 문체·같은 함정 패턴이 반복돼 "unseen"의 의미가 약해진다. 라벨 검수는 사람이
+  다 쓰면 같은 문체·같은 함정 패턴이 반복돼 held-out의 의미가 약해진다. 라벨 검수는 사람이
   양쪽 모두 전수 확인했다.
 
 라벨 분포는 Pilot(SUPPORTED 46 / UNSUPPORTED 14 / INSUFFICIENT 4), Test(25 / 26 / 2)다.
@@ -164,6 +164,24 @@ Recall 모두 Qwen이 우세. Kanana가 Macro F1과 latency에서 우세하지�
 승인"하는 실패가 "맞는 걸 틀렸다고 거부"하는 것보다 훨씬 위험한 금융 Verifier 맥락에서는
 FAR을 우선한다.
 
+> **이 선택에는 지표가 보여주지 않은 교환이 있었다(#28에서 확인).** Kanana는 Pilot의
+> INSUFFICIENT 4건을 **4/4 맞혔고, Qwen은 0/4**다. FAR 한 지표에서 이기고 판정 클래스 하나를
+> 통째로 잃은 셈인데, 당시 우선순위 지표에는 그 손실이 드러나지 않았다. Macro F1이 사실상 그
+> 신호였지만(Kanana 0.7652 vs Qwen 0.5464) "보조 지표"로 밀려 있었다 — §6·§9 참고.
+
+**그럼 Qwen 선택은 옳았나 — 옳았다.** #28에서 확인한 두 가지가 근거다.
+
+1. **Qwen이 INSUFFICIENT를 놓칠 때 100% UNSUPPORTED로 간다**(Pilot 4/4, Test 2/2). SUPPORTED로
+   간 적이 한 번도 없다. 즉 잃은 클래스의 실패 양상은 "위험한 승인"이 아니라 **보수적 차단**이다 —
+   안전을 해치지 않고 utility만 깎는다.
+2. **빈도가 다르다.** 부정 라벨은 Pilot 64건 중 18건(28%)인데 INSUFFICIENT는 4건(6%)이다. Kanana는
+   자주 등장하는 위험 케이스에서 2배 더 승인하고(FAR 0.2222), Qwen은 드문 케이스에서 보수적으로
+   틀린다. 정확도도 Qwen이 높다(0.8438 vs 0.7969).
+
+다만 **결론은 맞았어도 당시 근거는 불완전했다.** Macro F1을 "보조 지표"로 넘긴 판단이 결과적으로
+옳았던 건 그 지표가 신뢰할 수 없어서였지(§9), 거기 담긴 신호가 무의미해서가 아니었다. 지금이라면
+클래스별 recall을 함께 보고 "INSUFFICIENT를 포기하는 교환"을 명시적으로 승인했을 것이다.
+
 Qwen의 latency 열세는 설정 실수가 아니라 실측으로 확인된 구조적 현상이다 — Qwen3.5의
 GDN(Gated DeltaNet) 하이브리드 레이어가 vLLM/Triton에서 아직 Kanana의 FlashAttention2
 경로만큼 성숙하게 최적화되어 있지 않다(`results/model_selection/qwen_latency_diagnosis.md`).
@@ -173,38 +191,120 @@ GDN(Gated DeltaNet) 하이브리드 레이어가 vLLM/Triton에서 아직 Kanana
 두 개선안은 모두 기각했다. 채택/기각 판단 기준과 근거는 §6에 표로 정리했다. **v2로 Test
 단계까지 고정**했다(Langfuse `verifier-system-prompt` production label).
 
-## 4. 최종 결과 — Test(Unseen, 53건)
+## 4. 최종 결과 — Test(held-out, 53건)
 
-| 지표 | Pilot(64) | **Test(53, unseen)** |
+Test는 **모델·프롬프트 선정에 사용하지 않은 held-out 셋을 최초 1회 평가**한 결과다
+(이후 #28의 감사 실험에 재사용됐다 — §9 참고).
+
+| 지표 | Pilot(64) | **Test(53, held-out)** |
 |---|---|---|
-| False Accept Rate | 0.1111 | **0.1071** |
-| UNSUPPORTED Recall | 0.8571 | **0.8846** |
-| Macro F1 | 0.6656 | **0.8434** |
+| False Accept Rate ↓ | 0.1111 | **0.1071** |
+| SUPPORTED Recall ↑ (정상 claim 인식) | 0.9130 | **1.0000** |
+| UNSUPPORTED Recall ↑ | 0.8571 | **0.8846** |
+| INSUFFICIENT Recall ↑ | 0.0000 | **0.0000** |
+| Macro F1 (참고) | 0.5464 | **0.6151** |
+| Accuracy (참고) | 0.8438 | **0.9057** |
 | Schema Valid Rate | 1.0 | **1.0** |
 | Latency p50 / p95 (최적화 전) | 7.83s / 17.05s | 9.08s / 14.27s |
 
-Pilot 튜닝에 전혀 쓰이지 않은 unseen 데이터에서도 핵심 지표(FAR·Recall)가 유지되거나
-소폭 개선됐다 — 모델/프롬프트 선정이 Pilot 64건에 과적합된 결과가 아니라는 근거다.
+Pilot 튜닝에 쓰이지 않은 데이터에서도 핵심 지표(FAR·UNSUPPORTED Recall)가 유지되거나 소폭
+개선됐다 — 모델/프롬프트 선정이 Pilot 64건에 과적합된 결과가 아니라는 근거다.
 
-## 5. Failure Analysis — 확정된 두 가지 약점
+**수치의 기준은 실제 채택한 서빙 경로(CUDA graph, `--max-num-seqs 4`)다.** 이전 판본은 Macro F1을
+**0.8434**로 적었는데, 그건 CUDA Graph 적용 전(eager, `max-model-len 2048`) 값이고 채택 설정에서는
+측정된 적이 없었다(#28에서 확인·정정).
 
-1. **INSUFFICIENT ↔ UNSUPPORTED 경계 혼동.** "정보 부재"(evidence에 판단거리 자체가 없음)와
-   "명시적 충돌"을 구분하지 못한다. Qwen뿐 아니라 **Nemotron Ultra 550B(4건 중 0건 정답)**,
-   Gemma-4-31B(1/4)도 유사하게 실패했고, 프롬프트 엔지니어링 두 가지 시도 모두 해결에
-   실패했다(§6) — 모델 체급과 무관한, **이 태스크/경계 정의 자체의 구조적 한계**로 결론짓는다.
-2. **`condition_omission`** — AND로 묶인 복합 조건 중 일부만 인용해서 claim을 만들면, "언급된
-   부분은 evidence와 일치한다"는 데 꽂혀서 **명시되지 않은 나머지 조건이 생략됐다는 사실 자체를
-   못 잡는다.** Test에서 신규 주입 2건 전부 놓쳤다.
+차이는 verdict **한 건**에서 온다. `p024_c01`(gold=INSUFFICIENT)이 eager에서는 정답이었는데 CUDA
+graph에서는 UNSUPPORTED로 뒤집혔다. 클래스별로 분해하면 왜 한 건이 macro 평균을 0.22나 움직이는지
+보인다.
 
-**cross-model validation** — 이 실패가 Qwen 고유인지 확인하기 위해 같은 Test 53건을 훨씬 큰
-모델에 그대로 돌렸다. Nemotron Ultra 550B의 지표는 Qwen3.5-4B와 **완전히 동일**했다(FAR
-0.1071, Recall 0.8846, Macro F1 0.8434). 파라미터가 130배 차이 나는 두 모델이 같은 지점에서
-같은 실수를 한 것이다. `condition_omission`도 Qwen 0/2, Claude Haiku 4.5 1/2, Nemotron
-0/2로, **"부분 인용 뒤에 숨은 조건을 evidence 전체와 대조하는" 추론 유형 자체가 구조적으로
-어렵다**는 해석을 뒷받침한다.
+| 경로 | SUPPORTED F1 | UNSUPPORTED F1 | INSUFFICIENT F1 | **Macro** | Accuracy |
+|---|---|---|---|---|---|
+| eager (이전 판본 기준) | 0.9434 | 0.9200 | **0.6667** | 0.8434 | 0.9245 |
+| CUDA graph (**채택**) | 0.9434 | 0.9020 | **0.0000** | 0.6151 | 0.9057 |
 
-두 약점 모두 [`results/eval/test_eval_review.md`](../eval/test_eval_review.md)에 케이스별로
-기록되어 있다.
+Test의 INSUFFICIENT는 2건뿐이라 그 클래스 F1이 0.6667 → 0으로 무너지면 3클래스 macro 평균이 그대로
+끌려간다. 정확도로는 1/53건(1.9%p) 차이다. **희소 클래스가 있는 3분류에서 Macro F1은 단일 verdict에
+지배당한다** — 이 프로젝트가 Macro F1을 보조 지표로 둔 게 결과적으로 옳았지만, 이유는 "보조라서"가
+아니라 **표본이 이 지표를 지탱하지 못해서**였다.
+
+이 차이는 실행 노이즈가 아니다. 같은 설정으로 두 번 돌리면 verdict도 reason 텍스트도 완전히
+동일하다(#28에서 확인).
+
+## 5. Failure Analysis — 두 가지 약점, 그리고 감사로 뒤집힌 해석
+
+이 절은 #28 자체 감사에서 **결론이 두 번 바뀐** 부분이다. 처음 판본은 두 약점을 모두 "태스크
+자체의 구조적 한계"로 결론지었는데, 4개 모델에 같은 실험을 돌려보니 **둘 다 그렇게 부를 수 없었다.**
+
+### 5.1 약점 ① — INSUFFICIENT를 사실상 출력하지 않는다 (모델별 특성)
+
+채택 설정의 Qwen은 **Pilot·Test 6개 실행 전부에서 INSUFFICIENT verdict를 한 번도 내지 않았다.**
+경계를 헷갈리는 게 아니라 세 번째 클래스에 도달하지 않는, 사실상 2분류기다.
+
+처음 판본은 이걸 "모델 체급 무관한 태스크 구조적 한계"로 결론지었다. **틀렸다.** 같은 프롬프트·같은
+데이터로 전체 모델을 보면 이렇다.
+
+| INSUFFICIENT 정답률 | Pilot (4건) | Test (2건) |
+|---|---|---|
+| **Kanana-2-3B (로컬 3B — 탈락시킨 후보)** | **4/4** | – |
+| Claude Haiku 4.5 | **4/4** | **2/2** |
+| Claude Sonnet 5 | **4/4** | – |
+| Nemotron Ultra 550B | 0/4 | 1/2 |
+| Gemma-4-31B | 1/4 | – |
+| **Qwen3.5-4B (채택)** | **0/4** | **0/2** |
+
+**3B 로컬 모델이 만점을 받는 태스크를 "태스크 구조적 한계"라고 부를 수 없다.** 정확한 서술은
+**"Qwen(및 Nemotron·Gemma)의 모델별 실패"**다. 원래 판본은 실패한 두 모델만 인용해 일반화했다.
+
+부수적으로, INSUFFICIENT gold를 UNSUPPORTED로 판정하면 FAR 정의상 "오승인 아님"으로 집계된다 —
+**이 실패는 1순위 지표에 전혀 잡히지 않는다.**
+
+### 5.2 약점 ② — 조건의 논리 구조와 적용 범위를 잡지 못한다
+
+AND로 묶인 조건 중 일부만 인용한 claim을 "언급된 부분은 evidence와 일치한다"며 승인한다. Test에서
+신규 주입 2건을 모두 놓쳤다(기존 `condition_omission`).
+
+처음 판본은 "프롬프트로 해결되지 않는다"고 적었다. 그런데 **그 문장은 INSUFFICIENT 경계에서만 두 번
+검증된 것**이었고, 완전성 규칙은 시도된 적이 없었다. #28에서 실제로 넣어봤다.
+
+- **규칙 1문장(v7)**: Qwen Test에서 **verdict 변화 0건.**
+- **절차형 규칙(v8)**: Qwen Test에서 **`condition_omission` 2/2 교정, FAR 0.** 목표는 달성됐다.
+
+**그런데 효과가 모델 능력에 종속된다.**
+
+| 모델 | v2 → v8 정확도 | 판정 |
+|---|---|---|
+| Sonnet 5 | 0.9062 → **0.9344** | 개선 (FAR 0, UNSUP Recall 1.0). 단 Schema Valid 1.0 → 0.953 |
+| Nemotron 550B | 0.9245 → **0.9623** (Test) | 개선 |
+| Haiku 4.5 | 0.9057 → **0.8491** (Test, FAR도 악화) | 악화 |
+| **Qwen3.5-4B (채택 모델)** | 0.8438 → **0.6875** (Pilot) | **붕괴** |
+
+Qwen이 Pilot에서 정상 claim **11건**을 새로 거부했다(정상 claim 인식률 0.913 → 0.674). 그 케이스를
+보면 원인이 분명하다.
+
+| 거부된 정상 claim | 모델이 든 이유 | 실제 구조 |
+|---|---|---|
+| `p004_c01` | 다른 우대조항(0.05%p)을 안 썼다 | **별개 혜택**에 속한 조건 — 대조 대상이 아님 |
+| `p020_c01` | 조건을 일부만 언급했다 | claim은 두 조건을 **모두** 언급했다(오독) |
+| `p034_c01` | 조건을 다 안 썼다 | **ANY_OF**(택일)를 ALL_OF로 간주 |
+
+**정정된 결론**: 약점은 "누락을 못 본다"가 아니라 **"evidence에 나열된 조건이 ALL_OF인지 ANY_OF인지,
+어느 혜택에 속하는지 범위(scope)를 잡지 못한다"**이다. 절차형 규칙은 그 판별 능력을 **요구**할 뿐
+제공하지 않는다 — 그래서 판별할 수 있는 모델에서는 개선이 되고, 못 하는 모델에서는 무차별 적용돼
+과잉거부가 된다.
+
+실패 방향도 모델마다 다르다. **Qwen은 UNSUPPORTED로**, **Haiku는 INSUFFICIENT로** 쏠린다(Test 변화
+4건 중 3건, Pilot 악화 5건 전부). 즉 이 규칙은 "누락 탐지 기능"이 아니라 **방향이 모델에 종속된
+엄격함 교란**이다.
+
+정확한 요약은 **prompt-solvable이 아니라 "프롬프트로 통제는 되지만 안정적이지 않다"**이다.
+production 프롬프트는 v2로 유지했다(§6).
+
+**→ 후속 과제로 이어지는 지점**: 판별 능력을 *요구*하는 대신 조건의 논리 구조(ALL_OF/ANY_OF/적용 범위)를
+**입력으로 제공**하면, 작은 모델에서도 과잉거부 없이 누락을 잡을 수 있는가? (§11)
+
+케이스별 기록은 [`results/eval/test_eval_review.md`](../eval/test_eval_review.md), 감사 실험 전체는
+[`results/eval/precondition_audit.md`](../eval/precondition_audit.md)에 있다.
 
 ## 6. Regression Evaluation — 변경을 어떤 기준으로 채택했나
 
@@ -222,9 +322,33 @@ Pilot 튜닝에 전혀 쓰이지 않은 unseen 데이터에서도 핵심 지표(
 | **프롬프트 v3** (Langfuse v3) — 판정 순서 규칙 + 예시 1개 | INSUFFICIENT 인식 개선 | Pilot 64 | INSUFFICIENT 4/4로 목표는 달성. 그러나 **기존에 맞히던 UNSUPPORTED가 흔들림** (Kanana Macro F1 0.7652→0.5714, Qwen FAR 0.111→**0.1667**) | **기각** |
 | **프롬프트 v4** (Langfuse v5) — 짧은 부정 규칙만 추가 | 같은 목표를 과적합 없이 | Pilot 64 | FAR·Recall은 동일하게 유지됐지만 **목표 지표가 오히려 악화** (Qwen INSUFFICIENT 1/4→0/4, Macro F1 0.6656→0.5464) | **기각** |
 | **CUDA Graph 활성화** (`--max-num-seqs 4`) | batch=1 decode 처리량 | Test 53 전체 재실행 | 12.4 → **44.3 tok/s(×3.6)**, 핵심 지표 동일(FAR 0.1071 / Recall 0.8846), verdict 변화 1건 | **채택** |
+| **완전성 규칙 1문장** (#28, v7) | `condition_omission` 탐지 | Test 53 | **verdict 변화 0건.** 판정이 하나도 안 움직임 | **기각**(무효과) |
+| **절차형 완전성 규칙** (#28, v8) | 같은 목표를 더 명시적으로 | Pilot 64 + Test 53, **4개 모델** | 채택 모델 Qwen에서 `condition_omission` 2/2 교정·FAR 0이지만 **정상 claim 인식률 0.913 → 0.674**(정확도 0.844 → 0.688). Sonnet·Nemotron에서는 오히려 개선 — **효과가 모델 능력에 종속**(§8.2) | **기각**(채택 모델에서 utility 붕괴) |
 
-기각 두 건에서 얻은 결론이 §5의 근거가 된다 — **접근이 정반대인 두 시도(절차+예시 추가 vs
-짧은 부정 규칙만)가 모두 실패했다면, 그건 프롬프트 문구 문제가 아니라 태스크 자체의 문제다.**
+INSUFFICIENT 경계를 노린 기각 두 건(v3·v5)에서 얻은 결론이 §5 약점 ①의 근거가 된다 —
+**접근이 정반대인 두 시도(절차+예시 추가 vs 짧은 부정 규칙만)가 모두 실패했다면, 그건 프롬프트
+문구 문제가 아니라 태스크 자체의 문제다.**
+
+약점 ②는 다르다. #28에서 처음으로 완전성 규칙을 시도했더니 **잡히긴 잡혔다**(Test 2/2). 기각 사유가
+"불가능"이 아니라 **"utility 비용이 크다"**로 바뀌었다는 뜻이다.
+
+### 이 회귀 표가 못 잡는 것 — 지표에 utility 제약이 없다
+
+v8은 1·2순위 지표(FAR·UNSUPPORTED Recall)가 **양쪽 split 모두에서 개선**됐는데, 실제로는 정상 claim
+인식률을 0.913 → 0.674로 떨어뜨린 변경이다. 우선순위 지표만 보고 판단했다면 명백한 악화를 "개선"으로
+승인했을 것이다. 같은 이유로 `"UNSUPPORTED"`만 반환하는 상수 스텁도 1·2·3순위를 전부 이긴다.
+
+문제는 FAR을 1순위로 둔 것 자체가 아니라 **그 짝이 되는 지표가 우선순위 안에 없다는 것**이다.
+순위제 대신 제약식이 맞다.
+
+> **FAR을 목표치 이하로 낮추되, 정상 claim 거부율(FRR)을 기준선 대비 악화시키지 않는다.**
+
+같이 보는 scorecard: FAR · UNSUPPORTED Recall · **SUPPORTED Recall(FRR)** · INSUFFICIENT Recall ·
+Macro F1 · Accuracy · 95% CI. 틀린 답변을 전부 막으려고 정상 답변까지 차단하는 검증기는 안전하지만
+쓸 수 없다 — 이번 실험이 그걸 실제 수치로 보여줬다.
+
+이번 프로젝트에서는 **지표 정의를 사후에 바꾸지 않았다.** 이미 보고된 수치의 기준을 소급 변경하면
+그게 더 나쁘기 때문이고, 대신 §9에 한계로 기록하고 후속 프로젝트의 설계 원칙으로 넘긴다.
 
 회귀 판정을 가능하게 한 조건은 두 가지였다. (1) Pilot 셋이 고정돼 있어 변경 전후를 같은 기준
 으로 비교할 수 있었고, (2) 모든 호출이 Langfuse에 trace로 남아 어떤 프롬프트 버전이 어떤 결과를
@@ -252,24 +376,50 @@ Pilot 튜닝에 전혀 쓰이지 않은 unseen 데이터에서도 핵심 지표(
 
 상세: `results/latency/capability_and_results.md`(실험 로그), `results/model_selection/qwen_latency_diagnosis.md`(source of truth).
 
-## 8. 참고용 — 대형 모델 대비 상한선
+## 8. 크로스모델 대조 — 무엇이 모델 탓이고 무엇이 태스크 탓인가
 
-Verifier 후보는 CLAUDE.md 방침상 로컬 3~4B급 SLM 2개로 제한했지만, "이 태스크·이 프롬프트가
-잘 짜여 있는가"를 참고하기 위해 동일 v2 프롬프트·동일 Pilot(64) 데이터셋을 Claude
-Haiku 4.5/Sonnet 5, NVIDIA-hosted Nemotron Ultra 550B, Gemma-4-31B에도 그대로 돌렸다
-(이 결과는 모델 선정 로직에 영향을 주지 않는다).
+Verifier 후보는 CLAUDE.md 방침상 로컬 3~4B급 SLM 2개로 제한했다. 대형 모델 실행은 **후보 선정에
+영향을 주지 않고**, 두 가지 다른 질문에 답하기 위한 것이다 — (1) 이 태스크·프롬프트가 잘 짜여
+있는가(상한선), (2) 관찰된 실패가 모델 탓인가 태스크 탓인가.
 
-| 지표 | Qwen(로컬) | Kanana(로컬) | Claude Haiku 4.5 | Claude Sonnet 5 | Nemotron Ultra 550B | Gemma-4-31B |
+### 8.1 상한선 — 같은 프롬프트, 같은 Pilot 64건
+
+| 지표 | Qwen(로컬) | Kanana(로컬) | Haiku 4.5 | Sonnet 5 | Nemotron 550B | Gemma-4-31B |
 |---|---|---|---|---|---|---|
-| FAR | 0.1111 | 0.2222 | **0.0** | 0.0556 | **0.0** | 0.0556 |
-| UNSUPPORTED Recall | 0.8571 | 0.7143 | 0.8571 | 0.7857 | 0.7857 | 0.7143 |
-| Macro F1 | 0.6656 | 0.7652 | 0.7552 | **0.8228** | 0.5665 | 0.6233 |
+| FAR ↓ | 0.1111 | 0.2222 | **0.0000** | 0.0556 | **0.0000** | 0.0556 |
+| SUPPORTED Recall ↑ | 0.9130 | 0.8043 | 0.8261 | **0.9348** | **0.9348** | **0.9348** |
+| UNSUPPORTED Recall ↑ | 0.8571 | 0.7143 | 0.8571 | 0.7857 | 0.7857 | 0.7143 |
+| INSUFFICIENT Recall ↑ | 0.0000 | **1.0000** | **1.0000** | **1.0000** | 0.0000 | 0.2500 |
+| Accuracy | 0.8438 | 0.7969 | 0.8438 | **0.9062** | 0.8438 | 0.8438 |
 
-**시사점**: 더 큰 모델은 같은 프롬프트로도 더 낮은 FAR을 뽑아낼 여지가 있다 — 즉 로컬 두
-후보의 현재 성능은 "이 태스크 자체의 상한"이 아니라 "이 체급에서 감수하는 트레이드오프"다.
-동시에 Nemotron Ultra(550B)도 INSUFFICIENT 4건을 전부 놓쳤다는 사실은, §5의 경계 혼동이
-모델 체급으로 해소되는 문제가 아니라는 근거를 더한다. (latency는 로컬 GPU 서빙 vs hosted
-API 왕복이라 직접 비교 대상이 아니며 참고 수치로만 본다.)
+**시사점**: 더 큰 모델은 같은 프롬프트로도 더 낮은 FAR을 뽑아낸다 — 로컬 후보의 성능은 "태스크
+자체의 상한"이 아니라 "이 체급에서 감수하는 트레이드오프"다. 다만 **INSUFFICIENT 열은 체급 순서를
+따르지 않는다** — 3B Kanana가 만점이고 550B Nemotron이 0점이다. §5.1의 근거가 여기 있다.
+
+(latency는 로컬 GPU 서빙 vs hosted API 왕복이라 직접 비교 대상이 아니다.)
+
+### 8.2 절차형 프롬프트(v8)를 4개 모델에 동일 적용
+
+§5.2에서 쓴 실험이다. 같은 규칙이 모델에 따라 정반대 결과를 낸다.
+
+| 모델 | split | FAR (v2 → v8) | SUPPORTED Recall | Accuracy | Schema |
+|---|---|---|---|---|---|
+| Sonnet 5 | Pilot | 0.0556 → **0.0000** | 0.9348 → 0.9070 | 0.9062 → **0.9344** | 1.000 → **0.953** |
+| Nemotron 550B | Pilot | 0.0000 → 0.0000 | 0.9348 → 0.9130 | 0.8438 → **0.8750** | 1.000 |
+| Nemotron 550B | Test | 0.1071 → **0.0357** | 1.0000 → 1.0000 | 0.9245 → **0.9623** | 1.000 |
+| Haiku 4.5 | Test | 0.0714 → **0.1071** | 0.9600 → 0.8800 | 0.9057 → **0.8491** | 1.000 |
+| **Qwen3.5-4B** | Pilot | 0.1111 → 0.0556 | 0.9130 → **0.6739** | 0.8438 → **0.6875** | 1.000 |
+
+세 가지가 한 번에 보인다.
+
+1. **능력 종속**: 조건의 논리 구조를 판별할 수 있는 모델(Sonnet·Nemotron)에서는 개선, 못 하는
+   모델(Qwen)에서는 붕괴.
+2. **실패 방향의 모델 종속**: Qwen은 UNSUPPORTED로, Haiku는 INSUFFICIENT로 쏠린다.
+3. **스키마 비용**: Sonnet은 절차를 충실히 수행하다 출력이 길어져 3/64에서 JSON이 잘렸다
+   (Schema Valid 0.953). 이 실패는 원래 하니스에서 잡히지 않고 실행이 중단됐는데, #28에서
+   `schema_valid=False`로 집계하도록 고쳐서 측정됐다.
+
+**이 절이 없었으면 "Qwen에서 안 되니 태스크가 어렵다"로 잘못 결론지었을 것이다.**
 
 ## 9. 알려진 한계 — 원본 데이터의 모호성
 
@@ -282,7 +432,44 @@ Verifier가 아무리 정확하게 판정해도 원문 자체가 모호하면 10
 이건 파이프라인의 실패가 아니라 **소스 데이터의 한계**이며, 그래서 이 문서 최상단과
 데모/서비스 단계 모두에 면책 문구를 명시한다.
 
-평가셋 쪽 한계(규모 64+53으로 오류 유형별 셀이 작다는 점, INSUFFICIENT 표본이 Pilot 4·Test
+### 지표 우선순위에 utility 제약이 없다
+
+CLAUDE.md가 정한 우선순위(FAR > UNSUPPORTED Recall > Schema Valid Rate)에는 **정상 claim을 거부하는
+실패를 재는 자리가 없다.** 그래서 상수 거부 스텁도, 실제 과잉거부 프롬프트(v8)도 상위 지표에서는
+"개선"으로 읽힌다. 대안이 되는 제약식과 scorecard는 §6에 정리했다. **이번 프로젝트에서는 지표 정의를
+사후에 바꾸지 않고 한계로만 기록한다.**
+
+### Macro F1은 이 데이터셋에서 헤드라인 지표로 부적절하다
+
+Pilot에서 **Macro F1 순위와 실제 유용성 순위가 뒤집힌다.**
+
+| 모델 | FAR | Accuracy | **Macro F1** |
+|---|---|---|---|
+| Nemotron 550B | **0.0000** | **0.8438** | 0.5665 |
+| Kanana-2-3B | 0.2222 | 0.7969 | **0.7652** |
+
+FAR도 정확도도 Nemotron이 나은데 Macro F1은 Kanana가 0.2 높다. 원인은 4건짜리 INSUFFICIENT
+클래스가 3클래스 macro 평균에서 1/3 가중치를 갖기 때문이다. Test에서는 더 심해서, Qwen과 Haiku의
+주요 두 클래스 F1은 사실상 같은데(0.94 / 0.90~0.92) **Macro F1 격차 0.19가 전부 2건짜리 클래스에서
+나온다**(§4).
+
+클래스 불균형이 심한 소표본 3분류에서는 macro 평균 대신 **클래스별 recall과 support를 함께**
+제시하는 편이 정직하다. 이 리포트의 §4·§8 표를 그렇게 바꿨다.
+
+### 표본이 작아 신뢰구간이 넓다
+
+Wilson 95% 신뢰구간(Test 53건): FAR 0.1071 → [0.037, 0.272](폭 23.5%p), UNSUPPORTED Recall
+0.8846 → [0.710, 0.960], INSUFFICIENT 정답률 1/2 → [0.095, 0.905]. **FAR을 0.107에서 0.07로
+줄이는 개선은 이 표본으로는 노이즈와 구분되지 않는다.** §5 약점 ①의 Test 근거도 2건뿐이다.
+
+### Test 셋은 더 이상 held-out이 아니다
+
+#28의 검증 실험에서 Test 53건을 프롬프트 변형 3종에 사용했다. 리포트에 보고된 수치는 노출 이전
+측정값이라 유효하지만, **앞으로 프롬프트를 더 손보려면 새 평가셋이 필요하다.**
+
+### 그 밖의 평가셋 한계
+
+규모 64+53으로 오류 유형별 셀이 작다는 점, INSUFFICIENT 표본이 Pilot 4·Test
 2건뿐이라는 점, Dev split을 따로 두지 않아 Pilot 지표는 선정 과정에서 반복 사용된 값이라는 점
 등)는 [`dataset/eval_dataset_construction.md` §9](../dataset/eval_dataset_construction.md)에
 정리했다.
@@ -303,7 +490,25 @@ observation에 링크되므로, eval 결과 파일명(`{split}_{model}_prompt-v{
 Langfuse 버전 번호다. 프롬프트 전문과 버전 이력은 [`prompts/`](../../prompts/) 참고.
 
 상품 데이터셋 파일은 인증키 기반으로 제공되는 데이터라 공개 repo에 포함하지 않는다. 재현
-절차와 마스킹 샘플은 [`data/sample/README.md`](../../data/sample/README.md)에 있다.
+절차와 마스킹 샘플은 [`data/sample/README.md`](../../data/sample/README.md)에 있다. eval 실행 로그도 같은 이유로
+텍스트를 제거한 통합 요약본만 추적한다 — [`results/eval/runs_summary.json`](../eval/runs_summary.json)에
+본 실험 13건과 #28 감사 11건, 총 24개 실행의 지표·클래스별 recall·문항별 판정이 들어 있다.
+
+### 재현 계약 — 무엇까지 고정해야 같은 실험인가
+
+#28에서 확인된 사실: **동일 설정 2회 실행은 verdict도 reason 텍스트도 완전히 동일**하다. 반면
+serving 실행 경로가 바뀌면 경계 케이스가 흔들린다(§4의 `p024_c01`). 따라서 "같은 모델·같은
+프롬프트"는 같은 실험의 조건으로 부족하고, 아래가 전부 고정돼야 한다.
+
+| 축 | 이번 실험 값 |
+|---|---|
+| 모델 / 양자화 | `Intel/Qwen3.5-4B-int4-AutoRound`, quantization `inc`, dtype `bfloat16` |
+| 추론 엔진 | vLLM **v0.27.1** (`vllm/vllm-openai@sha256:0a51ea5b…bfd967`) |
+| 실행 경로 | CUDA graph (`FULL_AND_PIECEWISE`, capture `[1,2,4,8]`) |
+| 서빙 파라미터 | `--max-model-len 1024 --max-num-seqs 4 --gpu-memory-utilization 0.85`, `seed=0` |
+| 생성 파라미터 | `temperature=0`, `max_tokens=512`, `response_format=json_schema` |
+| chat template | `chat_template_kwargs={"enable_thinking": false}` |
+| 프롬프트 버전 | Langfuse `verifier-system-prompt` production=**v6** |
 
 ## 11. 지금 하지 않은 것 / 스코프 밖
 
@@ -311,10 +516,19 @@ Langfuse 버전 번호다. 프롬프트 전문과 버전 이력은 [`prompts/`](
 상품군 확대, 대규모 RAG, GDN/Mamba 커널 레벨 직접 최적화 — CLAUDE.md "지금 하지 않는 것"
 절 참고. 다음에 손댈 가치가 있는 후보:
 
-- `condition_omission`을 노리는 명시적 few-shot이나 evidence 전체 대조를 강제하는 프롬프트
-  구조 변경(이번 프로젝트에서는 INSUFFICIENT 경계 프롬프트 튜닝에 리소스를 썼고 여기까지는
-  못 갔음).
+- **과잉거부를 재는 지표를 우선순위 안에 넣기** — FAR과 짝이 되는 False Reject Rate 계열.
+  §9에서 확인했듯 현재 우선순위는 상수 스텁도, 실제 과잉거부 프롬프트도 "개선"으로 읽는다.
+- **조건의 논리 구조를 입력으로 제공하기.** §5.2·§8.2가 보여준 건 "절차형 규칙이 판별 능력을
+  *요구*할 뿐 제공하지 않는다"는 것이다. 우대조건을 `ALL_OF / ANY_OF / NOT / CAP / temporal` 같은
+  구조로 미리 정리해 evidence와 함께 주면, 작은 모델에서도 과잉거부 없이 누락을 잡을 수 있는가 —
+  이게 가장 직접적인 후속 실험이다. 잘 되면 완전성 판정의 상당 부분을 모델 추론에서 결정론 채점으로
+  옮길 수 있다.
+- **v8을 강한 프롬프트 baseline으로 보존.** 구조화 접근을 평가할 때 "그냥 프롬프트를 길게 쓰면
+  되는 것 아닌가"라는 반문에 답하려면 이 비교군이 필요하다.
+- `condition_omission`에 대한 프롬프트 개선을 **과잉거부 없이** 달성하는 문구 탐색 — #28의 v8은
+  잡아내긴 했으나 대가가 컸다. 단, Test가 이미 노출됐으므로 새 평가셋이 먼저 필요하다.
 - INSUFFICIENT 표본을 늘린 평가셋 확장 — 현재 6건으로는 이 라벨의 지표가 흔들린다.
+- 안전 케이스에 `pass^k` 집계 적용 (현재는 전부 k=1 비율).
 - vLLM이 GDN 경로를 더 최적화하는 향후 버전이 나오면 latency 재검증.
 
 ## 12. 이슈 트래킹
@@ -338,7 +552,7 @@ finance_verifier/
 └── results/
     ├── final/           # ★ #15 최종 결과 리포트 + 대시보드
     ├── dataset/         # 평가 데이터셋 설계·구축 과정
-    ├── eval/            # Pilot·Test eval 분석 + eval/raw/ (원본 실행 로그 JSON)
+    ├── eval/            # eval 분석 + 감사 기록 + runs_summary.json (실행 로그 원본은 로컬 전용)
     ├── model_selection/ # 모델 선정, latency 진단 (source of truth)
     ├── latency/         # #25 latency 실험 상세 로그
     ├── decomposition/, verifier/, normalization/, profiling/  # 컴포넌트별 검증 기록
@@ -350,7 +564,8 @@ finance_verifier/
 |---|---|
 | [`results/dataset/eval_dataset_construction.md`](../dataset/eval_dataset_construction.md) | **평가 데이터셋 설계·구축** — taxonomy, gold label 규칙, 검수, Pilot/Test 분리 |
 | [`results/eval/smoke_eval_review.md`](../eval/smoke_eval_review.md) | Pilot(64건) 분석 — 모델/프롬프트 선정 과정 |
-| [`results/eval/test_eval_review.md`](../eval/test_eval_review.md) | Test(unseen 53건) 최종 검증 + 크로스모델 체크 |
+| [`results/eval/test_eval_review.md`](../eval/test_eval_review.md) | Test(held-out 53건) 최종 검증 + 크로스모델 체크 |
+| [`results/eval/precondition_audit.md`](../eval/precondition_audit.md) | **eval 전제 감사 + 검증 실험(#28)** — 약점 재규명, 지표 우선순위 취약성 |
 | [`results/model_selection/qwen_latency_diagnosis.md`](../model_selection/qwen_latency_diagnosis.md) | Qwen latency 원인 진단 (source of truth) |
 | [`results/latency/capability_and_results.md`](../latency/capability_and_results.md) | #25 latency 실험 상세 로그 |
 | [`results/decomposition/claim_decomposer_smoke_review.md`](../decomposition/claim_decomposer_smoke_review.md) | Claim Decomposer 검증, self-containment 수정 경위 |

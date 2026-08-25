@@ -65,12 +65,12 @@ def prediction_to_eval_record(pred: dict) -> EvalRecord:
     )
 
 
-def run(model_key: str, split: str) -> dict:
+def run(model_key: str, split: str, prompt_label: str = "production") -> dict:
     claims = load_claims(split)
     if not claims:
         raise ValueError(f"no claims found for split={split!r} in data/{split}/claim_dataset.json")
 
-    prompt_obj = get_or_create_prompt(PROMPT_NAME, SYSTEM_PROMPT)
+    prompt_obj = get_or_create_prompt(PROMPT_NAME, SYSTEM_PROMPT, label=prompt_label)
     prompt_version = prompt_obj.version if prompt_obj else "unknown"
     out_path = RESULTS_DIR / f"{split}_{model_key}_prompt-v{prompt_version}.json"
     predictions = load_checkpoint(out_path)
@@ -82,7 +82,7 @@ def run(model_key: str, split: str) -> dict:
 
     if remaining:
         print(f"[{model_key}/{split}] warm-up call (excluded from latency)...")
-        verify(WARMUP_EVIDENCE, WARMUP_CLAIM, model_key, metadata={"purpose": "warmup"})
+        verify(WARMUP_EVIDENCE, WARMUP_CLAIM, model_key, metadata={"purpose": "warmup"}, prompt_label=prompt_label)
 
     for claim in remaining:
         metadata = {
@@ -94,7 +94,7 @@ def run(model_key: str, split: str) -> dict:
             "dataset_split": claim["dataset_split"],
         }
         try:
-            result = verify(claim["evidence_text"], claim["claim_text"], model_key, metadata=metadata)
+            result = verify(claim["evidence_text"], claim["claim_text"], model_key, metadata=metadata, prompt_label=prompt_label)
         except Exception as e:
             print(f"[run_eval] ERROR on {claim['claim_id']}: {e} -- stopping, {len(predictions)} results saved")
             save_checkpoint(out_path, model_key, split, predictions, complete=False)
@@ -129,8 +129,10 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("model_key", choices=["qwen", "kanana"])
     parser.add_argument("--split", default="smoke")
+    parser.add_argument("--prompt-label", default="production",
+                        help='Langfuse prompt label (예: "experiment"로 production을 건드리지 않고 변형 검증)')
     args = parser.parse_args()
-    run(args.model_key, args.split)
+    run(args.model_key, args.split, args.prompt_label)
 
 
 if __name__ == "__main__":
