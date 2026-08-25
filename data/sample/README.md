@@ -26,7 +26,7 @@
 | `s001` | `spcl_cnd`가 `null`, `mtrt_int` 3구간 | 자연 결측(natural missing) → INSUFFICIENT gold label의 소스 |
 | `s002` | 번호 매긴 우대조건, `max_limit` 있음, 옵션 4구간 | 기본금리/최고금리 혼동(`base_vs_max_rate`) 케이스 |
 | `s003` | `any_of`(1가지 이상 요건 충족) 조건 | AND/OR 반전(`condition_reversal`) 케이스 |
-| `s004` | `all_of`(A이면서 동시에 B) + 예외 단서 | 복합조건 일부 누락(`condition_omission`) 케이스 — Test에서 확인된 확정 약점 |
+| `s004` | `all_of`(A이면서 동시에 B) + 예외 단서 | 복합조건 일부 누락(`condition_omission`) 케이스 — Test에서 확인된 약점 |
 
 `claim_dataset_sample.json` 6건은 위 4개 상품에 대해 SUPPORTED / `base_vs_max_rate` /
 `condition_reversal` / `condition_omission` / 자연 결측 INSUFFICIENT를 각각 하나씩 담고 있다.
