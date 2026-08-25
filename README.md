@@ -26,8 +26,9 @@
 
 ## 결과 요약
 
-Test는 **모델·프롬프트 선정에 사용하지 않은 held-out 셋을 최초 1회 평가**한 결과다. 수치는 최종
-채택한 서빙 경로(CUDA graph, `--max-num-seqs 4`) 기준이다.
+Test는 **모델·프롬프트 선정에 사용하지 않은 held-out 셋**이다(선정 확정 후 1회 평가). 아래 수치는
+그 셋을 **최종 채택 서빙 경로**(CUDA graph, `--max-num-seqs 4`)에서 측정한 값이다 — 선정 당시의
+최초 평가는 CUDA Graph 적용 전 경로였다([리포트 §4](./results/final/report.md)).
 
 | 지표 | Test 53건 | 의미 |
 |---|---|---|
@@ -37,7 +38,8 @@ Test는 **모델·프롬프트 선정에 사용하지 않은 held-out 셋을 최
 | INSUFFICIENT Recall ↑ | **0.0000** | 아래 한계 ① |
 | Accuracy | 0.9057 | 참고 |
 | Schema Valid Rate | 100% (53/53) | JSON 스키마 준수 |
-| Latency (batch=1 decode, #25 후) | 12.4 → **44.3 tok/s (×3.6)** | 서빙 설정만으로 개선 |
+| Latency p50 / p95 (문항당) | **2.55s / 3.97s** | 채택 경로에서 측정 |
+| decode 처리량 (#25 최적화) | 12.4 → **44.3 tok/s (×3.6)** | 별도 벤치마크 — 서빙 설정만으로 개선 |
 
 **모델**: Qwen3.5-4B-int4-AutoRound 단독 확정 (Kanana-2-3B는 FAR 열세로 탈락).
 
@@ -45,7 +47,7 @@ Test는 **모델·프롬프트 선정에 사용하지 않은 held-out 셋을 최
 
 프로젝트 종료 후 eval 설계를 점검하는 도구를 만들어 **이 프로젝트에 되돌려 적용했다**
 ([#28](./results/eval/precondition_audit.md)). 4개 모델(Qwen·Haiku·Sonnet·Nemotron 550B)에 같은
-실험을 다시 돌린 결과다.
+프롬프트 실험을 새로 돌리고, 여기에 기존 실행 기록(Kanana·Gemma)까지 함께 놓고 비교한 결과다.
 
 | 처음 결론 | 검증 후 |
 |---|---|
@@ -80,6 +82,10 @@ Recall 1.000 / UNSUPPORTED 0.8846 / **INSUFFICIENT 0.000**이다. 요구사항�
 | INSUFFICIENT Recall ↑ | 0.0000 | **1.0000** | Kanana |
 | Accuracy ↑ | **0.8438** | 0.7969 | Qwen |
 
+같은 64문항·같은 프롬프트지만 측정 경로는 다르다 — Qwen은 최종 채택 서빙 경로, Kanana는 선정
+당시 경로(eager)에서 잰 값이다. Qwen을 선정 당시 경로로 재면 INSUFFICIENT Recall이 0.25, 정확도가
+0.8571이고, 나머지 지표와 결론은 동일하다.
+
 Kanana가 이긴 한 칸은 가볍지 않다. 다만 이 프로젝트의 위험 기준에서는 두 가지가 그 손실을 제한한다.
 
 - **Qwen이 INSUFFICIENT를 놓칠 때 100% UNSUPPORTED로 간다**(Pilot 4/4, Test 2/2). SUPPORTED로 간 적이
@@ -98,8 +104,8 @@ Kanana가 이긴 한 칸은 가볍지 않다. 다만 이 프로젝트의 위험 
 ### 확인된 한계 2가지
 
 ① **INSUFFICIENT를 사실상 출력하지 않는다** — 채택 설정 6개 실행 전부에서 이 verdict가 0건. 모델
-선정 때 FAR을 근거로 Kanana를 탈락시켰는데, **Kanana는 이 항목에서 4/4였고 Qwen은 0/4**다. 지표
-우선순위가 그 교환을 보여주지 않았다.
+선정 때 FAR을 근거로 Kanana를 탈락시켰는데, **Kanana는 이 항목을 4/4 맞혔고 Qwen은 선정 당시 1/4,
+현재 채택 설정에서는 0/4**다. 지표 우선순위가 그 교환을 보여주지 않았다.
 
 ② **조건의 논리 구조와 적용 범위를 잡지 못한다** — AND 조건 일부만 인용한 claim을 승인한다. 절차형
 프롬프트로 잡아낼 수는 있지만, 그러면 ANY_OF(택일) 조건을 ALL_OF로 오인해 정상 claim까지 거부한다.
@@ -123,6 +129,7 @@ finance_verifier/
 │   └── sample/          # 구조 확인용 마스킹 샘플 (실제 상품 데이터는 미포함 — 아래 참고)
 └── results/
     ├── final/           # ★ #15 최종 결과 리포트 + 발표용 대시보드
+    ├── dataset/         # 평가 데이터셋 설계·구축 과정
     ├── eval/            # eval 분석 + 감사 기록 + runs_summary.json (실행 로그 원본은 로컬 전용)
     ├── model_selection/ # 모델 선정, latency 진단(source of truth)
     ├── latency/         # #25 latency 실험 상세 로그
@@ -156,7 +163,9 @@ Management로 버전 관리했다.** 실행 시점에 `production` 라벨이 붙
 `model`/`gold_label`/`error_type`/`dataset_split` 등의 metadata도 함께 trace로 남긴다.
 
 프롬프트 전문과 버전 이력(v1~v6, v3·v5 기각 경위)은 [`prompts/`](./prompts/)에 읽기용
-스냅샷으로 정리해 뒀다. 실제 SSOT는 Langfuse와 `src/verifier/client.py`이다.
+스냅샷으로 정리해 뒀다. #28 감사에서 시험한 두 변형은 production을 건드리지 않도록 별도 라벨
+(`experiment`=v7, `experiment2`=v8)로 올렸고, **production은 v6 그대로다.** 실제 SSOT는 Langfuse와
+`src/verifier/client.py`이다.
 
 ## 문서 지도
 

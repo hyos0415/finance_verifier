@@ -663,12 +663,13 @@
       <div><span class="section-num">05</span><h2>결과 — Qwen3.5-4B를 최종 채택</h2></div>
     </div>
     <p class="lede">
-      한 번도 튜닝에 쓰지 않은 새로운 문제 53개로 마지막 확인을 했다.
+      모델 선정은 <b>선정용 64문항</b>으로 하고, 고른 모델만 <b>한 번도 튜닝에 쓰지 않은 새
+      문제 53개</b>로 마지막 확인을 했다. 아래 두 카드는 측정한 문제 세트가 다르다.
     </p>
     <div class="cmp-grid">
       <div class="cmp-card chosen">
         <div class="cmp-head">
-          <div><div class="cmp-title">Qwen3.5-4B</div><div class="cmp-sub">최종 채택</div></div>
+          <div><div class="cmp-title">Qwen3.5-4B</div><div class="cmp-sub">최종 채택 · 새 문제 53개 기준</div></div>
           <span class="verdict-badge chosen">채택</span>
         </div>
         <div class="bar-row"><span class="bl">틀린 답 잘못 승인</span><div class="bar-track"><div class="bar-fill accent" style="width:22%"></div></div><span class="bv mono">10.7%</span></div>
@@ -676,7 +677,7 @@
       </div>
       <div class="cmp-card">
         <div class="cmp-head">
-          <div><div class="cmp-title">Kanana-2-3B</div><div class="cmp-sub">비교 후 탈락</div></div>
+          <div><div class="cmp-title">Kanana-2-3B</div><div class="cmp-sub">비교 후 탈락 · 선정용 64문항 기준</div></div>
           <span class="verdict-badge rejected">탈락</span>
         </div>
         <div class="bar-row"><span class="bl">틀린 답 잘못 승인</span><div class="bar-track"><div class="bar-fill muted" style="width:44%"></div></div><span class="bv mono">22.2%</span></div>
@@ -684,9 +685,10 @@
       </div>
     </div>
     <p class="note">
-      Kanana는 다른 몇몇 지표에서 더 좋았지만, 가장 위험한 실수(틀린 답 잘못 승인)를
-      더 많이 저질렀다 — 그래서 탈락시켰다. 형식 오류(정해진 답변 틀을 못 지킨 경우)는
-      53건 모두 0건이었다.
+      Kanana는 <b>"정보가 없다"를 가려내는 판정에서 더 정확했다</b>(선정용 문항 4개 중 Kanana
+      4개, Qwen 1개 — 최종 서빙 설정에서는 0개). 그런데 가장 위험한 실수(틀린 답 잘못 승인)를 2배 더 저질렀고, 이 프로젝트가
+      가장 피하려던 게 그 실수라서 Qwen을 택했다. <b>버린 능력이 무엇이었는지는 07에서 다시
+      다룬다.</b> 형식 오류(정해진 답변 틀을 못 지킨 경우)는 양쪽 모두 0건이었다.
     </p>
   </section>
 
@@ -725,41 +727,69 @@
     </div>
     <p class="lede">
       프로젝트를 마친 뒤, 평가 방식 자체에 허점이 없는지 점검하는 도구를 만들어 이 프로젝트에
-      다시 적용하고, 같은 실험을 모델 4개에 다시 돌렸다. <b>거기서 위 두 한계에 대한 판단이 모두
+      다시 적용하고, 같은 실험을 모델 4개에 다시 돌렸다. <b>바로 위 두 한계에 대한 판단이 모두
       바뀌었다.</b>
     </p>
-    <div class="cmp-grid">
-      <div class="cmp-card chosen">
-        <div class="cmp-head">
-          <div><div class="cmp-title">채택한 방식</div><div class="cmp-sub">지금의 검증 지침</div></div>
-        </div>
-        <ul class="cmp-list">
-          <li>위험한 답변을 놓친 비율 <b>11.1%</b></li>
-          <li>정상 답변을 통과시킨 비율 <b>91.3%</b></li>
-        </ul>
-      </div>
-      <div class="cmp-card flaw">
-        <div class="cmp-head">
-          <div><div class="cmp-title">더 엄격한 방식</div><div class="cmp-sub">조건을 하나씩 세어 대조하도록 지시</div></div>
-          <span class="verdict-badge flaw">기각</span>
-        </div>
-        <ul class="cmp-list">
-          <li>위험한 답변을 놓친 비율 <b>11.1% → 5.6%</b></li>
-          <li class="missing">정상 답변을 통과시킨 비율 <b>91.3% → 67.4%</b></li>
-        </ul>
+
+    <div class="lim-card">
+      <div class="lim-head"><span class="lim-num">한계 1 · 정정</span><h3 style="margin:0">태스크가 어려운 게 아니라, 고른 모델의 특성이었다</h3></div>
+      <p class="note" style="margin-bottom:8px">
+        "정보가 없다"를 가려내는 능력은 <b>모델 크기 순서를 따르지 않았다.</b> 탈락시켰던 3B
+        모델은 4문항을 전부 맞혔고, 550B 모델은 하나도 못 맞혔다. 태스크 자체의 한계라고
+        결론지었던 게 틀렸다.
+      </p>
+      <div class="status-grid">
+        <span class="status-chip"><span class="status-dot ok"></span>Kanana 3B (탈락) — 4 / 4</span>
+        <span class="status-chip"><span class="status-dot ok"></span>Claude Haiku — 4 / 4</span>
+        <span class="status-chip"><span class="status-dot ok"></span>Claude Sonnet — 4 / 4</span>
+        <span class="status-chip"><span class="status-dot miss"></span>Qwen 3.5-4B (채택) — 0 / 4</span>
+        <span class="status-chip"><span class="status-dot miss"></span>Nemotron 550B — 0 / 4</span>
       </div>
     </div>
-    <p class="note" style="margin-top:10px">
-      <b>한계 2 — 원인이 달랐다.</b> "조건이 빠진 걸 못 본다"가 아니라, 여러 조건이 <b>"전부 필요"한지
-      "하나만 충족하면 되는지"를 구분하지 못하는 것</b>이 핵심 병목이었다. 그래서 엄격하게
-      검사시키면 하나만 충족해도 되는 조건까지 "빠졌다"고 보고 정상 답변을 거부한다. 실제로 더 큰
-      모델(조건 관계를 구분할 수 있는)에서는 같은 지침이 오히려 성능을 올렸다.
-    </p>
-    <p class="note">
-      <b>한계 1 — 태스크 문제가 아니었다.</b> "정보 없음"을 구분하는 능력은 모델 크기 순서를 따르지
-      않았다. 탈락시켰던 <b>3B 모델은 이 항목을 전부 맞혔고</b>, 550B 모델은 하나도 못 맞혔다.
-      즉 태스크가 어려운 게 아니라 <b>고른 모델의 특성</b>이었다.
-    </p>
+
+    <div class="lim-card">
+      <div class="lim-head"><span class="lim-num">한계 2 · 정정</span><h3 style="margin:0">"조건이 빠진 걸 못 본다"가 아니라 "조건 관계를 구분 못 한다"</h3></div>
+      <p class="note" style="margin-bottom:8px">
+        조건을 하나씩 세어 대조하도록 지시하자 놓치던 것을 잡아냈다. <b>그런데 하나만 충족해도
+        되는 조건까지 "빠졌다"고 보고 정상 답변을 거부했다.</b> 즉 병목은 누락 탐지가 아니라,
+        여러 조건이 <b>"전부 필요"한지 "하나만 충족하면 되는지"</b>를 구분하는 능력이었다.
+        조건 관계를 구분할 수 있는 더 큰 모델에서는 같은 지시가 오히려 성능을 올렸다.
+      </p>
+      <div class="cmp-grid">
+        <div class="cmp-card chosen">
+          <div class="cmp-head">
+            <div><div class="cmp-title">채택한 방식</div><div class="cmp-sub">지금의 검증 지침</div></div>
+          </div>
+          <ul class="cmp-list">
+            <li>위험한 답변을 놓친 비율 <b>11.1%</b></li>
+            <li>정상 답변을 통과시킨 비율 <b>91.3%</b></li>
+          </ul>
+        </div>
+        <div class="cmp-card flaw">
+          <div class="cmp-head">
+            <div><div class="cmp-title">더 엄격한 방식</div><div class="cmp-sub">조건을 하나씩 세어 대조하도록 지시</div></div>
+            <span class="verdict-badge rejected">기각</span>
+          </div>
+          <ul class="cmp-list">
+            <li>위험한 답변을 놓친 비율 <b>11.1% → 5.6%</b></li>
+            <li class="missing">정상 답변을 통과시킨 비율 <b>91.3% → 67.4%</b></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="lim-card">
+      <div class="lim-head"><span class="lim-num">새로 찾은 문제</span><h3 style="margin:0">"위험한 답변을 덜 놓치는데 왜 안 쓰나?" — 평가 기준 자체가 불완전했다</h3></div>
+      <p class="note" style="margin-bottom:0">
+        이 프로젝트는 <b>"위험한 답변을 놓치지 않는 것"을 1순위</b>로 두고 지표를 정했다. 그런데
+        그 목록에 <b>"정상 답변을 막지 않는 것"을 재는 자리가 없었다.</b> 그래서 1순위만 보면 더
+        엄격한 방식이 "개선"으로 보인다 — 실제로는 정상 답변 3건 중 1건을 막는데도(거부율
+        8.7% → 32.6%). 극단적으로는 <b>무조건 "틀렸다"고만 답하는 껍데기가 1순위 지표에서 만점</b>을
+        받는다. 목표를 순위가 아니라 조건으로 바꿔야 한다 —
+        <b>"위험한 답변은 줄이되, 정상 답변을 막는 비율은 나빠지지 않는다."</b>
+      </p>
+    </div>
+
     <p class="finding">→ 안전하기만 하고 정상 답변을 막는 검증기는 쓸 수 없다. 이 지침은 채택하지 않았다.</p>
   </section>
 
