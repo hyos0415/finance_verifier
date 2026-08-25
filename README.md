@@ -8,10 +8,10 @@
 
 아래는 기술적으로 더 상세한 내용이다.
 
-> ⚠️ 이 리포지토리와 산출물은 **연구/평가 목적**이다. 여기 담긴 상품 정보·판정 결과는 금융
+> ⚠️ 이 repo와 산출물은 **연구/평가 목적**이다. 여기 담긴 상품 정보·판정 결과는 금융
 > 상담이나 투자/예금 의사결정의 근거로 쓰기 위한 게 아니다. 정확한 상담은 반드시 해당
 > 금융회사 영업점 방문 또는 전문 상담사와의 상담을 통해 확인해야 한다 (이유:
-> [결과 리포트 §7](./results/final/report.md#7-알려진-한계--원본-데이터의-모호성)).
+> [결과 리포트 §9](./results/final/report.md#9-알려진-한계--원본-데이터의-모호성)).
 
 ## 핵심 질문
 
@@ -64,14 +64,14 @@ finance_verifier/
     ├── decomposition/, verifier/, normalization/, profiling/  # 컴포넌트별 검증 기록
 ```
 
-## 데이터 방침 — 수집한 상품 데이터셋은 리포에 없다
+## 데이터 방침 — 수집한 상품 데이터셋은 repo에 없다
 
 데이터 소스는 금융감독원 「금융상품 한눈에」 Open API(은행권 정기예금)이고, **인증키를
-발급받아야 호출할 수 있다.** 수집한 스냅샷 파일을 공개 리포에 그대로 올리는 건 인증키로
+발급받아야 호출할 수 있다.** 수집한 스냅샷 파일을 공개 repo에 그대로 올리는 건 인증키로
 접근을 관리하는 제공 방식을 우회하는 재배포에 가깝다고 보고, **`data/` 아래 상품 데이터셋
 파일은 git 추적에서 제외했다** (`.gitignore` 참고).
 
-| 리포에 없는 것 (로컬 전용) | 대신 리포에 있는 것 |
+| repo에 없는 것 (로컬 전용) | 대신 repo에 있는 것 |
 |---|---|
 | `data/raw/` API 원본 스냅샷 | 수집·정규화 코드 (`src/ingest/`) |
 | `data/normalized/` canonical product record | 정규화 규칙 문서 (`results/normalization/`) |
@@ -84,7 +84,7 @@ finance_verifier/
 
 ## 프롬프트 관리 — Langfuse
 
-Verifier system prompt는 리포 파일이 아니라 **[Langfuse](https://langfuse.com) Prompt
+Verifier system prompt는 repo 파일이 아니라 **[Langfuse](https://langfuse.com) Prompt
 Management로 버전 관리했다.** 실행 시점에 `production` 라벨이 붙은 버전을 끌어오고, 그 버전
 번호가 Langfuse generation observation에 자동으로 링크된다 — eval 결과 파일명
 (`{split}_{model}_prompt-v{N}.json`)의 `N`이 그 Langfuse 버전 번호다. Verifier 호출마다
@@ -99,6 +99,7 @@ Management로 버전 관리했다.** 실행 시점에 `production` 라벨이 붙
 |---|---|
 | [`results/final/report.md`](./results/final/report.md) | **최종 결과 리포트** — 모델 선정, Test 결과, latency, 한계, 면책 |
 | [`results/final/report_dashboard.html`](./results/final/report_dashboard.html) | 프로젝트 소개 & 결과 발표용 대시보드 (다운로드 후 브라우저로 열기) |
+| [`results/dataset/eval_dataset_construction.md`](./results/dataset/eval_dataset_construction.md) | **평가 데이터셋 설계·구축** — 오류 taxonomy, gold label 규칙, Pilot/Test 분리, 검수 |
 | [`results/eval/smoke_eval_review.md`](./results/eval/smoke_eval_review.md) | Pilot(64건) 분석 — 모델/프롬프트 선정 과정 |
 | [`results/eval/test_eval_review.md`](./results/eval/test_eval_review.md) | Test(unseen 53건) 최종 검증 + 크로스모델 체크 |
 | [`results/model_selection/qwen_latency_diagnosis.md`](./results/model_selection/qwen_latency_diagnosis.md) | Qwen latency 원인 진단 (source of truth) |
@@ -127,5 +128,5 @@ python -m src.eval.run_eval --split test --model qwen --prompt-version productio
 `.env.example`을 `.env`로 복사해 `FINLIFE_API_KEY`(금융상품 API 수집용),
 `ANTHROPIC_API_KEY`(Claim Decomposer), `LANGFUSE_*`(trace/프롬프트 관리) 등 필요한 키를 채운다.
 
-eval을 직접 돌리려면 상품 데이터를 먼저 수집해야 한다 (리포에 포함되지 않음) —
+eval을 직접 돌리려면 상품 데이터를 먼저 수집해야 한다 (repo에 포함되지 않음) —
 [`data/sample/README.md`](./data/sample/README.md)의 재현 절차 참고.

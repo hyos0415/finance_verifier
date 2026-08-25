@@ -12,7 +12,7 @@
 
 Verifier 프롬프트는 **버전 관리를 Langfuse로 했다.** `get_or_create_prompt()`가 실행 시점의
 `production` 버전을 끌어오고, 그 버전 번호가 Langfuse generation observation에 자동으로 링크되어
-`prompt_version` 메타데이터로 남는다. 그래서 리포 안에서 프롬프트 버전을 수동으로 관리하는 파일은
+`prompt_version` 메타데이터로 남는다. 그래서 repo 안에서 프롬프트 버전을 수동으로 관리하는 파일은
 없고, eval 결과 파일명(`{split}_{model}_prompt-v{N}.json`)의 `N`이 Langfuse 버전 번호와 그대로
 일치한다.
 

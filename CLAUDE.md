@@ -49,7 +49,7 @@ Retrieval correctness ≠ Answer correctness — 검색이 정확한 근거를 �
 
 **Qwen3.5는 기본적으로 thinking(장문 추론) 모드로 응답한다.** `apply_chat_template(..., enable_thinking=False)`를 넘기지 않으면 최종 답변 전에 영어 위주의 긴 "Thinking Process"를 생성하며(512 토큰으로도 안 끝남, 중간에 한자 혼입도 관찰됨), Verifier의 엄격한 JSON 스키마 출력과 맞지 않는다. Verifier client에서는 반드시 `enable_thinking=False`로 호출한다. **vLLM OpenAI 호환 엔드포인트로 호출할 때는** (Transformers 네이티브 `apply_chat_template` kwarg가 아니라) 요청 body에 `"chat_template_kwargs": {"enable_thinking": false}`를 넣어야 동일하게 적용된다 (#7에서 재현 확인 — 이거 없으면 80 토큰으로도 thinking 중간에 잘림).
 
-**모델 로드 체크는 순서가 중요하다.** "체크포인트가 Transformers로 로드되는가"는 WSL2/Docker 세팅과 무관하게 최우선·병렬로 바로 확인한다(리포 세팅 직후). Kanana는 이 단계에서 실패하면 후보 자체를 재검토해야 하는 리스크가 크다. **Qwen AutoRound는 Windows native Transformers에서 실패해도 바로 탈락시키지 않는다** — 모델 아키텍처 문제 / AutoRound·quantization backend 문제 / Windows backend 문제를 분리해서 보고, 최종 판단은 WSL2 + Docker + vLLM 경로에서 실제 serving 가능한지까지 확인한 뒤 내린다. "vLLM에서 이 아키텍처가 도는가"는 WSL2+Docker+vLLM 세팅 이후에 확인해도 된다 — vLLM은 미지원 아키텍처를 Transformers backend로 fallback할 수 있어서 여기서 막혀도 회복 여지가 있다.
+**모델 로드 체크는 순서가 중요하다.** "체크포인트가 Transformers로 로드되는가"는 WSL2/Docker 세팅과 무관하게 최우선·병렬로 바로 확인한다(repo 세팅 직후). Kanana는 이 단계에서 실패하면 후보 자체를 재검토해야 하는 리스크가 크다. **Qwen AutoRound는 Windows native Transformers에서 실패해도 바로 탈락시키지 않는다** — 모델 아키텍처 문제 / AutoRound·quantization backend 문제 / Windows backend 문제를 분리해서 보고, 최종 판단은 WSL2 + Docker + vLLM 경로에서 실제 serving 가능한지까지 확인한 뒤 내린다. "vLLM에서 이 아키텍처가 도는가"는 WSL2+Docker+vLLM 세팅 이후에 확인해도 된다 — vLLM은 미지원 아키텍처를 Transformers backend로 fallback할 수 있어서 여기서 막혀도 회복 여지가 있다.
 
 ## 실행 환경
 
@@ -104,7 +104,7 @@ Eval harness / Claim Decomposer / 데이터 수집 코드는 처음부터 컨테
 - 범위: **은행권 정기예금만** (적금·대출 등 이번 범위 제외).
 - API 제한: 일일 조회 10,000건, 기본 1회 조회 100건. Live service가 아니라 snapshot dataset 구축이므로 충분.
 - 첫 raw 데이터 확인 후 `baseList`/`optionList`를 상품 식별자 기준으로 join해 canonical record로 정규화한다. **raw 응답을 보기 전에 과도한 abstraction을 만들지 않는다.**
-- **`data/` 아래 상품 데이터셋 파일은 공개 리포에 올리지 않는다.** 인증키 발급을 전제로 제공되는 데이터를 공개 리포에 그대로 올리는 건 그 제공 방식을 우회하는 재배포에 가깝다. `data/raw`·`data/normalized`·`data/{smoke,pilot,dev,test}`는 `.gitignore`로 로컬 전용이며, 구조 확인용 마스킹 샘플(`data/sample/`, 합성 데이터)만 추적한다.
+- **`data/` 아래 상품 데이터셋 파일은 공개 repo에 올리지 않는다.** 인증키 발급을 전제로 제공되는 데이터를 공개 repo에 그대로 올리는 건 그 제공 방식을 우회하는 재배포에 가깝다. `data/raw`·`data/normalized`·`data/{smoke,pilot,dev,test}`는 `.gitignore`로 로컬 전용이며, 구조 확인용 마스킹 샘플(`data/sample/`, 합성 데이터)만 추적한다.
 
 ### API Key 보안 — 반드시 지킬 것
 

@@ -9,12 +9,12 @@
 | `deposit_products_sample.json` | `data/normalized/deposit_products_canonical.json` | canonical product record 4건 (`s001`~`s004`) |
 | `claim_dataset_sample.json` | `data/{smoke,pilot,dev,test}/claim_dataset.json` | Claim + gold label 6건 (`s002_c01` 등) |
 
-## 왜 실제 데이터가 리포에 없나
+## 왜 실제 데이터가 repo에 없나
 
 이 프로젝트의 데이터 소스는 금융감독원 "금융상품 한눈에" Open API이고, 인증키를 발급받아야
-호출할 수 있다. 수집한 스냅샷 파일을 공개 리포에 그대로 올리는 건 인증키로 접근을 관리하는
+호출할 수 있다. 수집한 스냅샷 파일을 공개 repo에 그대로 올리는 건 인증키로 접근을 관리하는
 제공 방식을 우회하는 재배포에 가깝다고 판단해, **`data/` 아래 데이터셋 파일은 git 추적에서
-제외했다** (`.gitignore` 참고). 수집·정규화 코드와 평가 지표·분석 리포트는 리포에 그대로 있다.
+제외했다** (`.gitignore` 참고). 수집·정규화 코드와 평가 지표·분석 리포트는 repo에 그대로 있다.
 
 ## 4건이 커버하는 구조
 

@@ -11,7 +11,7 @@ version 2에 아래 취지의 "판정 순서" 규칙과 예시 1개를 덧붙인
 > 언급이 있고 내용이 다를 때만 UNSUPPORTED.
 
 > **주의**: 이 문구는 당시 리뷰 문서에 요약된 형태다. 덧붙인 규칙 원문과 worked example 전문은
-> Langfuse version 3에만 남아 있고 리포에는 보존되지 않았다.
+> Langfuse version 3에만 남아 있고 repo에는 보존되지 않았다.
 
 **결과**: 목표했던 INSUFFICIENT 4건은 양쪽 모델 모두 정확히 맞혔지만, 원래 맞히던
 SUPPORTED/UNSUPPORTED 판정이 흔들렸다("애매하면 INSUFFICIENT로 도피"). Kanana Macro F1
