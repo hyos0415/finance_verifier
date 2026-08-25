@@ -74,7 +74,7 @@ Test는 **모델·프롬프트 선정에 사용하지 않은 held-out 셋을 최
 | INSUFFICIENT Recall ↑ | 0.0000 | **1.0000** | Kanana |
 | Accuracy ↑ | **0.8438** | 0.7969 | Qwen |
 
-Kanana가 이긴 한 칸이 뼈아파 보이지만, 두 가지가 그 손실을 제한한다.
+Kanana가 이긴 한 칸이 아쉬워 보이지만, 두 가지가 그 손실을 제한한다.
 
 - **Qwen이 INSUFFICIENT를 놓칠 때 100% UNSUPPORTED로 간다**(Pilot 4/4, Test 2/2). SUPPORTED로 간 적이
   한 번도 없다 — 잃은 클래스의 실패는 "위험한 승인"이 아니라 **보수적 차단**이다.
