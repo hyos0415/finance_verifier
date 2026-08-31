@@ -590,6 +590,7 @@ finance_verifier/
 
 | 문서 | 내용 |
 |---|---|
+| [`results/final/retrospective.md`](./retrospective.md) | **프로젝트 회고(KPT)** — 판단 과정에 대한 기록. 무엇을 계속할지·무엇이 틀렸는지·다음에 뭘 다르게 할지 |
 | [`results/dataset/eval_dataset_construction.md`](../dataset/eval_dataset_construction.md) | **평가 데이터셋 설계·구축** — taxonomy, gold label 규칙, 검수, Pilot/Test 분리 |
 | [`results/eval/smoke_eval_review.md`](../eval/smoke_eval_review.md) | Pilot(64건) 분석 — 모델/프롬프트 선정 과정 |
 | [`results/eval/test_eval_review.md`](../eval/test_eval_review.md) | Test(held-out 53건) 최종 검증 + 크로스모델 체크 |
