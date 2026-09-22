@@ -23,6 +23,10 @@ results/eval/audit/
 # 인쇄(A4 가로) → PDF로 저장 (인쇄용 스타일은 그 파일의 @media print 블록에 있다).
 results/final/*.pdf
 
+# Jev 대조 실행 결과 — 1회성 side check(#30)라 수치는 이슈 본문에 남기고 파일은 추적하지 않는다.
+# 재현: python -m src.eval.run_eval_jev --split test (TYPESAFE_API_KEY 필요)
+results/eval/test_jev*.json
+
 # Personal notes (not project deliverables)
 notes/
 
