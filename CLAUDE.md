@@ -234,3 +234,43 @@ model, prompt_version, product_id, source_field, gold_label, error_type, reasoni
 - **PR**: 이슈 하나당 PR 하나. PR 본문에 `Closes #N`을 넣어 머지 시 이슈가 자동으로 닫히게 한다. 리뷰어는 없으므로 self-merge, **squash merge**로 히스토리를 깔끔하게 유지한다.
 - **커밋 메시지**: `feat:` / `fix:` / `chore:` / `docs:` 정도의 최소 prefix만 사용.
 - 이미 끝난 작업(예: repo/secret 초기 설정)을 뒤늦게 이슈로 추적할 때는, 이슈를 만들고 관련 커밋 SHA를 comment로 남긴 뒤 바로 닫아 히스토리만 남긴다.
+
+## 스택 · 평가셋 · 알려진 병목
+
+기술 결정 기록(`hyos0415/adr`)의 `jhs-decisions` 스킬이 이 절을 읽고, 이 스택에 영향을 주는 새 릴리스·모델만 골라낸다. 의존성이나 모델을 바꾸면 이 절도 같이 고친다.
+
+manifest가 없다. 아래 의존성은 추적되는 `.py`의 import에서 뽑았다(2026-09-29).
+
+### 의존성 → component
+
+| 의존성 | component |
+|---|---|
+| vLLM (docker `vllm/vllm-openai:latest`, `scripts/run_vllm_container.sh`) | verifier |
+| langfuse | verifier, eval |
+| pydantic | verifier, eval |
+| requests | verifier, ingest |
+| anthropic | decomposition |
+| openai (NVIDIA API 호출용) | eval |
+| typesafe_sdk | eval |
+| torch · transformers | scripts (`check_model_load.py`) |
+
+### 외부 모델·서비스
+
+| 모델·서비스 | component |
+|---|---|
+| `Intel/Qwen3.5-4B-int4-AutoRound` (채택) · `kakaocorp/kanana-2-3b-instruct` — vLLM localhost:8000 | verifier |
+| Anthropic `claude-sonnet-5` | decomposition |
+| Anthropic `claude-sonnet-5` · `claude-haiku-4-5-20251001` (비교) | eval |
+| NVIDIA API `nvidia/nemotron-3-ultra-550b-a55b` · `google/gemma-4-31b-it` (비교) | eval |
+| TypeSafe Jev `jev-1.13.0` (side check, ADR 0001) | eval |
+| Langfuse Cloud (US) — 프롬프트 `verifier-system-prompt`·트레이스 | verifier |
+| 금융감독원 Finlife API | ingest |
+
+### 평가셋
+
+- 실제 세트: `data/{smoke,pilot,dev,test}/claim_dataset.json` — **gitignore** (로컬 전용)
+- 추적: `data/sample/`(합성 샘플) · `results/eval/runs_summary.json`
+
+### 알려진 병목
+
+- 누락을 못 보는 게 아니라, **조건이 ALL_OF인지 ANY_OF인지, 어느 혜택에 속하는지 범위를 잡는 능력**이다 (위 「데이터 난이도 / Failure Taxonomy」, README)
