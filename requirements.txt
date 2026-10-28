@@ -1,0 +1,10 @@
+# 직접 의존성 — 추적되는 .py의 import에서 뽑았다 (2026-10-28, #33). 하한 = 그날 .venv 설치 버전.
+# torch · transformers는 scripts/check_model_load.py(GPU 모델 로드 확인)만 쓴다 — 여기 넣지 않는다.
+# vLLM은 docker 이미지(scripts/run_vllm_container.sh)라 여기 없다.
+anthropic>=0.122,<2        # decomposition — v2 major·breaking, 호출 경로 확인 뒤 올린다 (adr 0016)
+langfuse>=4.14,<5          # verifier · eval — v5 major·breaking (adr 0015)
+openai>=3.3                # eval (NVIDIA API — OpenAI 호환)
+pydantic>=2.13
+python-dotenv>=1.2
+requests>=2.34
+typesafe-sdk>=0.7          # eval (run_eval_jev.py)

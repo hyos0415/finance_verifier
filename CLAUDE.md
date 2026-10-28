@@ -239,7 +239,7 @@ model, prompt_version, product_id, source_field, gold_label, error_type, reasoni
 
 기술 결정 기록(`hyos0415/adr`)의 `jhs-decisions` 스킬이 이 절을 읽고, 이 스택에 영향을 주는 새 릴리스·모델만 골라낸다. 의존성이나 모델을 바꾸면 이 절도 같이 고친다.
 
-manifest가 없다. 아래 의존성은 추적되는 `.py`의 import에서 뽑았다(2026-09-29).
+manifest: `requirements.txt` (2026-10-28 신설, #33 — 직접 의존성만, torch·transformers 제외). 아래 의존성은 추적되는 `.py`의 import에서 뽑았다(2026-09-29). major 상한: anthropic `<2` (ADR 0016) · langfuse `<5` (ADR 0015).
 
 ### 의존성 → component
 
