@@ -30,6 +30,12 @@ shift
 
 CONTAINER_NAME="vllm-server"
 HF_CACHE_WIN_PATH="C:\\Users\\user\\.cache\\huggingface"
+# Pinned to the v0.27.1 digest the registered results were measured with
+# (results/eval/runs_summary.json -> serving_qwen_adopted.image). With `:latest`
+# the next pull jumps several vLLM releases and the numbers can no longer be
+# reproduced under the same conditions. Decision: hyos0415/adr ADR 0012.
+# To upgrade, write a new ADR and re-run the Qwen serving smoke (answers + latency).
+VLLM_IMAGE="vllm/vllm-openai@sha256:0a51ea5b4ae2dc5d81890e5173f54203d2a3ae0cfffe51b8fd2afd4391bfd967"
 
 docker rm -f "$CONTAINER_NAME" >/dev/null 2>&1 || true
 
@@ -38,7 +44,7 @@ MSYS_NO_PATHCONV=1 docker run -d --name "$CONTAINER_NAME" --gpus all \
   -v "${HF_CACHE_WIN_PATH}:/root/.cache/huggingface" \
   -p 8000:8000 \
   --ipc=host \
-  vllm/vllm-openai:latest \
+  "$VLLM_IMAGE" \
   --model "$MODEL" \
   --gpu-memory-utilization 0.85 \
   --max-model-len 1024 \
