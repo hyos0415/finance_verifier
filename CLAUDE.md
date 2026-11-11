@@ -245,7 +245,7 @@ manifest가 없다. 아래 의존성은 추적되는 `.py`의 import에서 뽑�
 
 | 의존성 | component |
 |---|---|
-| vLLM (docker `vllm/vllm-openai:latest`, `scripts/run_vllm_container.sh`) | verifier |
+| vLLM 0.27.1 (docker `vllm/vllm-openai@sha256:0a51ea5b…` digest 고정 — ADR 0012, `scripts/run_vllm_container.sh`) | verifier |
 | langfuse | verifier, eval |
 | pydantic | verifier, eval |
 | requests | verifier, ingest |
